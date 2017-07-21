@@ -10,9 +10,28 @@ def oneOf(set: Set[String]): String = {
 
 randomElt(Set("the", "a", "not"))
 
-def sentence(): Unit = {
-  val l = List(randomElt(Set("the", "a", "not")), randomElt(Set("the", "a", "not")))
-  println(l)
+def sentence(): List[String] = {
+  nounPhrase() ::: verbPhrase()
+}
+
+def verb(): String = {
+  oneOf(Set("hit", "took", "saw", "liked"))
+}
+
+def noun(): String = {
+  oneOf(Set("man", "ball", "woman", "table"))
+}
+
+def article(): String = {
+  oneOf(Set("the", "a"))
+}
+
+def verbPhrase(): List[String] = {
+  verb() +: nounPhrase()
+}
+
+def nounPhrase(): List[String] = {
+  List(article(), noun())
 }
 
 sentence()
