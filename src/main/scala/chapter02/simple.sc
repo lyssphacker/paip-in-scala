@@ -31,7 +31,33 @@ def verbPhrase(): List[String] = {
 }
 
 def nounPhrase(): List[String] = {
-  List(article(), noun())
+  (article() +: adjOrNone()) ::: (noun() +: ppOrNone())
+}
+
+def prep(): String ={
+  oneOf(Set("to", "in", "by", "with", "on"))
+}
+
+def adj(): String = {
+  oneOf(Set("big", "little", "blue", "green", "adiabatic"))
+}
+
+def pp(): List[String] = {
+  prep() +: nounPhrase()
+}
+
+def adjOrNone(): List[String] = {
+  if (Random.nextInt(2) == 0)
+    List.empty[String]
+  else
+    adj() +: adjOrNone()
+}
+
+def ppOrNone(): List[String] = {
+  if (Random.nextInt(2) == 0)
+    List.empty[String]
+  else
+    pp() ::: ppOrNone()
 }
 
 sentence()
