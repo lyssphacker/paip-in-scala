@@ -23,11 +23,8 @@ def rewrites(key : String)(implicit grammar : List[(String, Any)]) : Option[Any]
   grammar.toMap.get(key)
 }
 
-def randomElt(s: Any): Any = {
-  s match {
-    case x : String => oneOf(x.split(" ").toList)
-    case l : List[String] => l
-  }
+def randomElt(s: String): String = {
+  oneOf(s.split(" ").toList)
 }
 
 def oneOf(lst: List[String]): String = {
@@ -39,7 +36,12 @@ def generate(phrase : Any): List[Any] = {
   phrase match {
     case x :: xs => Intro.mappend(generate, x :: xs)
     case s : String if !rewrites(s).isEmpty =>
-      generate(randomElt(rewrites(s).get))
+      val rewrite = rewrites(s).get
+      rewrite match {
+        case str : String => generate(randomElt(str))
+        case lst : List[String] => generate(lst)
+      }
+
     case _ => List(phrase)
   }
 }
