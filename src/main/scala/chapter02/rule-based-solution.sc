@@ -35,7 +35,7 @@ def oneOf(lst: List[String]): String = {
 def generate(phrase : Any): List[Any] = {
   phrase match {
     case x :: xs => Intro.mappend(generate, x :: xs)
-    case s : String if !rewrites(s).isEmpty =>
+    case s : String if rewrites(s).isDefined =>
       val rewrite = rewrites(s).get
       rewrite match {
         case str : String => generate(randomElt(str))
