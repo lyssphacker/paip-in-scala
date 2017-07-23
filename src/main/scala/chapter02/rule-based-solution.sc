@@ -36,13 +36,8 @@ def rewrites(key : String)(implicit grammar : List[(String, Rhs)]) : Option[Rhs]
 }
 
 def randomElt(lst: List[String]): String = {
-  oneOf(lst)
-}
-
-def oneOf(lst: List[String]): String = {
   lst.toVector(Random.nextInt(lst.size))
 }
-
 
 def generate(phrase : Any): List[Any] = {
   phrase match {
