@@ -11,23 +11,22 @@ implicit val simpleGrammar = List(
   "Verb" -> "hit took saw liked"
 )
 
-def ruleLhs(rule : (String, AnyRef)): String = {
+def ruleLhs(rule : (String, Any)): String = {
   rule._1
 }
 
-def ruleRhs(rule : (String, AnyRef)): AnyRef = {
+def ruleRhs(rule : (String, Any)): Any = {
   rule._2
 }
 
-def rewrites(key : Any)(implicit grammar : List[(Any, AnyRef)]) : Option[AnyRef] = {
+def rewrites(key : String)(implicit grammar : List[(String, Any)]) : Option[Any] = {
   grammar.toMap.get(key)
 }
 
-def randomElt(s: AnyRef): String = {
+def randomElt(s: Any): Any = {
   s match {
     case x : String => oneOf(x.split(" ").toList)
-    case l : List[String] => oneOf(l)
-    case _ => null
+    case l : List[String] => l
   }
 }
 
@@ -40,19 +39,12 @@ def generate(phrase : Any): List[Any] = {
   phrase match {
     case x :: xs => Intro.mappend(generate, x :: xs)
     case s : String if !rewrites(s).isEmpty =>
-      generate(randomElt(rewrites(phrase).get))
+      generate(randomElt(rewrites(s).get))
     case _ => List(phrase)
   }
 }
 
-randomElt("hit took saw liked")
-rewrites("sentence")
-
-randomElt(rewrites("sentence").get)
-generate(List("noun-phrase", "verb-phrase"))
-generate(List("Article", "Noun"))
-generate(List("Verb", "noun-phrase"))
-generate("noun-phrase")
+generate("sentence")
 
 
 
