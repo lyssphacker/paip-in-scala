@@ -41,14 +41,16 @@ def randomElt(lst: List[String]): String = {
 
 def generate(phrase : Any): List[Any] = {
   phrase match {
-    case x :: xs => Intro.mappend(generate, x :: xs)
-    case s : String if rewrites(s).isDefined =>
-      val rewrite = rewrites(s).get
-      rewrite match {
-        case OneOf(value) => generate(randomElt(value))
-        case Concat(value) => generate(value)
+    case lst : List[Any] => Intro.mappend(generate, lst)
+    case s : String =>
+      rewrites(s) match {
+        case some : Some[Rhs] =>
+          some.get match {
+            case OneOf(value) => generate(randomElt(value))
+            case Concat(value) => generate(value)
+          }
+        case None => List(phrase)
       }
-
     case _ => List(phrase)
   }
 }
