@@ -8,8 +8,6 @@ def oneOf(set: Set[String]): String = {
   set.toVector(Random.nextInt(set.size))
 }
 
-randomElt(Set("the", "a", "not"))
-
 def sentence(): List[String] = {
   nounPhrase() ::: verbPhrase()
 }
@@ -34,7 +32,7 @@ def nounPhrase(): List[String] = {
   (article() +: adjOrNone()) ::: (noun() +: ppOrNone())
 }
 
-def prep(): String ={
+def prep(): String = {
   oneOf(Set("to", "in", "by", "with", "on"))
 }
 
@@ -60,4 +58,3 @@ def ppOrNone(): List[String] = {
     pp() ::: ppOrNone()
 }
 
-sentence()
