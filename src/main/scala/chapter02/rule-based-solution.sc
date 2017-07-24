@@ -5,11 +5,13 @@ import scala.util.Random
 abstract class Rhs
 
 case class Concat(lsts: List[String]) extends Rhs
+
 object Concat {
   def apply(lst: String*) = new Concat(lst.toList)
 }
 
 case class OneOf(lsts: List[String]) extends Rhs
+
 object OneOf {
   def apply(lst: String*) = new OneOf(lst.toList)
 }
@@ -23,15 +25,15 @@ implicit val simpleGrammar = List(
   "Verb" -> OneOf("hit", "took", "saw", "liked")
 )
 
-def ruleLhs(rule : (String, Rhs)): String = {
+def ruleLhs(rule: (String, Rhs)): String = {
   rule._1
 }
 
-def ruleRhs(rule : (String, Rhs)): Rhs = {
+def ruleRhs(rule: (String, Rhs)): Rhs = {
   rule._2
 }
 
-def rewrites(key : String)(implicit grammar : List[(String, Rhs)]) : Option[Rhs] = {
+def rewrites(key: String)(implicit grammar: List[(String, Rhs)]): Option[Rhs] = {
   grammar.toMap.get(key)
 }
 
@@ -39,12 +41,12 @@ def randomElt(lst: List[String]): String = {
   lst.toVector(Random.nextInt(lst.size))
 }
 
-def generate(phrase : Any): List[Any] = {
+def generate(phrase: Any): List[Any] = {
   phrase match {
-    case lst : List[Any] => Intro.mappend(generate, lst)
-    case s : String =>
+    case lst: List[Any] => Intro.mappend(generate, lst)
+    case s: String =>
       rewrites(s) match {
-        case some : Some[Rhs] =>
+        case some: Some[Rhs] =>
           some.get match {
             case OneOf(value) => generate(randomElt(value))
             case Concat(value) => generate(value)
