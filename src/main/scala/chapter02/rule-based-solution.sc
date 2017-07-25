@@ -65,9 +65,7 @@ def generate(phrase: Any): List[Any] = {
   }
 }
 
-generate("sentence")
-generate("noun-phrase")
-rewrites("noun-phrase")
+generate(List("noun-phrase", "verb-phrase"))
 
 
 
