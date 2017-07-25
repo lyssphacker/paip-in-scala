@@ -19,9 +19,9 @@ object OneOf {
 implicit val simpleGrammar = List(
   "sentence" -> Concat("noun-phrase", "verb-phrase"),
   "noun-phrase" -> OneOf(Concat("Article", "Adj*", "Noun", "PP*"), "Name", "Pronoun"),
-  "verb-phrase" -> Concat("Verb", "noun-phrase"),
-  "PP*" -> Concat("PP", "PP*"),
-  "Adj*" -> Concat("Adj", "Adj*"),
+  "verb-phrase" -> Concat("Verb", "noun-phrase", "PP*"),
+  "PP*" -> OneOf(Nil, Concat("PP", "PP*")),
+  "Adj*" -> OneOf(Nil, Concat("Adj", "Adj*")),
   "PP" -> Concat("Prep", "noun-phrase"),
   "Prep" -> OneOf("to", "in", "by", "on"),
   "Adj" -> OneOf("big", "little", "blue", "green", "adiabatic"),
@@ -65,7 +65,8 @@ def generate(phrase: Any): List[Any] = {
   }
 }
 
-generate(List("noun-phrase", "verb-phrase"))
+generate("sentence")
+
 
 
 
