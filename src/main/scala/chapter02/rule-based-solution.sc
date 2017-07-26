@@ -65,7 +65,29 @@ def generate(phrase: Any): List[Any] = {
   }
 }
 
-generate("sentence")
+def generateTree(phrase: Any): List[Any] = {
+  phrase match {
+    case lst: List[Any] => phrase :: mapcar(generate, lst)
+    case s: String =>
+      rewrites(s) match {
+        case some: Some[Rhs] =>
+          some.get match {
+            case OneOf(value) => phrase :: generate(randomElt(value))
+            case Concat(value) => phrase :: generate(value)
+          }
+        case None => List(phrase)
+      }
+    case Concat(value) => phrase :: generate(value)
+    case _ => List(phrase)
+  }
+}
+
+def mapcar(fn: Any => List[Any], lst: List[Any]): List[Any] = {
+  lst.map(fn)
+}
+
+generateTree("sentence")
+
 
 
 
