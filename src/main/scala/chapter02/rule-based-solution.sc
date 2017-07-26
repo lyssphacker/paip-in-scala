@@ -67,17 +67,17 @@ def generate(phrase: Any): List[Any] = {
 
 def generateTree(phrase: Any): List[Any] = {
   phrase match {
-    case lst: List[Any] => phrase :: mapcar(generate, lst)
+    case lst: List[Any] => mapcar(generateTree, lst)
     case s: String =>
       rewrites(s) match {
         case some: Some[Rhs] =>
           some.get match {
-            case OneOf(value) => phrase :: generate(randomElt(value))
-            case Concat(value) => phrase :: generate(value)
+            case OneOf(value) => s :: generateTree(randomElt(value))
+            case Concat(value) => s :: generateTree(value)
           }
         case None => List(phrase)
       }
-    case Concat(value) => phrase :: generate(value)
+    case Concat(value) => generateTree(value)
     case _ => List(phrase)
   }
 }
