@@ -53,13 +53,10 @@ def generate(phrase: Any): List[Any] = {
     case lst: List[Any] => Intro.mappend(generate, lst)
     case s: String =>
       rewrites(s) match {
-        case some: Some[Rhs] =>
-          some.get match {
-            case OneOf(value) => generate(randomElt(value))
-            case Concat(value) => generate(value)
-          }
+        case some: Some[Rhs] => generate(some.get)
         case None => List(phrase)
       }
+    case OneOf(value) => generate(randomElt(value))
     case Concat(value) => generate(value)
     case _ => List(phrase)
   }
@@ -70,14 +67,11 @@ def generateTree(phrase: Any): List[Any] = {
     case lst: List[Any] => mapcar(generateTree, lst)
     case s: String =>
       rewrites(s) match {
-        case some: Some[Rhs] =>
-          some.get match {
-            case OneOf(value) => s :: generateTree(randomElt(value))
-            case Concat(value) => s :: generateTree(value)
-          }
+        case some: Some[Rhs] => s :: generateTree(some.get)
         case None => List(phrase)
       }
     case Concat(value) => generateTree(value)
+    case OneOf(value) => generateTree(randomElt(value))
     case _ => List(phrase)
   }
 }
@@ -86,6 +80,7 @@ def mapcar(fn: Any => List[Any], lst: List[Any]): List[Any] = {
   lst.map(fn)
 }
 
+//generate("sentence")
 generateTree("sentence")
 
 
