@@ -16,7 +16,7 @@ object OneOf {
   def apply(lst: Any*) = new OneOf(lst.toList)
 }
 
-implicit val simpleGrammar = List(
+implicit val biggerGrammar = List(
   "sentence" -> Concat("noun-phrase", "verb-phrase"),
   "noun-phrase" -> OneOf(Concat("Article", "Adj*", "Noun", "PP*"), "Name", "Pronoun"),
   "verb-phrase" -> Concat("Verb", "noun-phrase", "PP*"),
