@@ -76,7 +76,7 @@ def generateTree(phrase: Any): List[Any] = {
   }
 }
 
-def mapcar(fn: Any => List[Any], lst: List[Any]): List[Any] = {
+def mapcar(fn: Any => Any, lst: List[Any]): List[Any] = {
   lst.map(fn)
 }
 
