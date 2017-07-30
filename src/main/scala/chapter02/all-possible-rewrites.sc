@@ -1,5 +1,7 @@
 import chapter01.Intro
 
+import scala.util.Random
+
 abstract class Rhs
 
 case class Concat(lsts: List[String]) extends Rhs
@@ -23,6 +25,10 @@ implicit val simpleGrammar = List(
   "Verb" -> OneOf("hit", "took", "saw", "liked")
 )
 
+def randomElt(lst: List[Any]): Any = {
+  lst.toVector(Random.nextInt(lst.size))
+}
+
 def rewrites(key: String)(implicit grammar: List[(String, Rhs)]): Option[Rhs] = {
   grammar.toMap.get(key)
 }
@@ -37,7 +43,9 @@ object Expansion {
 
 case class Expansion(values: List[Any])
 
-def combineAll(xlist : List[Expansion], ylist : List[Expansion]) : List[Any] = {
+def combineAll(xlist : List[Any], ylist : List[Any]) : List[Any] = {
+  println("combineAll xlist: " + xlist)
+  println("combineAll ylist: " + ylist)
   Intro.mappend((y: Any) =>
     mapcar((x: Any) => {
       val Expansion(xval) = x
@@ -46,4 +54,25 @@ def combineAll(xlist : List[Expansion], ylist : List[Expansion]) : List[Any] = {
     }, xlist), ylist)
 }
 
-combineAll(List(Expansion("a"), Expansion("b")), List(Expansion("1"), Expansion("2")))
+def generateAll(phrase: Any): List[Any] = {
+  println("generateAll: " + phrase)
+  phrase match {
+    case Nil => List(Expansion())
+    case lst: List[Any] =>
+      combineAll(generateAll(lst.head), generateAll(lst.tail))
+    case s: String =>
+      rewrites(s) match {
+        case some: Some[Rhs] => generateAll(some.get)
+        case None => List(Expansion(phrase))
+      }
+    case OneOf(value) => Intro.mappend(generateAll, value)
+    case Concat(value) => generateAll(value)
+  }
+}
+
+//combineAll(List(Expansion("a"), Expansion("b")), List(Expansion("1"), Expansion("2")))
+
+generateAll("noun-phrase")
+
+//combineAll(List(Expansion("the"), Expansion("a")),
+//  List(Expansion("man"), Expansion("ball"), Expansion("woman"), Expansion("table")))
