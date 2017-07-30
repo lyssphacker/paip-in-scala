@@ -1,4 +1,4 @@
-
+import chapter01.Intro
 
 abstract class Rhs
 
@@ -27,7 +27,7 @@ def rewrites(key: String)(implicit grammar: List[(String, Rhs)]): Option[Rhs] = 
   grammar.toMap.get(key)
 }
 
-def mapcar(fn: Expansion => Any, lst: List[Expansion]): List[Any] = {
+def mapcar(fn: Any => Any, lst: List[Any]): List[Any] = {
   lst.map(fn)
 }
 
@@ -37,15 +37,13 @@ object Expansion {
 
 case class Expansion(values: List[Any])
 
-def mappend(fn: Expansion => List[Any], lst: List[Expansion]): List[Any] = {
-  lst.flatMap(fn)
-}
-
 def combineAll(xlist : List[Expansion], ylist : List[Expansion]) : List[Any] = {
-  mappend((y: Expansion) =>
-    mapcar((x: Expansion) => {
+  Intro.mappend((y: Any) =>
+    mapcar((x: Any) => {
       val Expansion(xval) = x
       val Expansion(yval) = y
       xval ::: yval
     }, xlist), ylist)
 }
+
+combineAll(List(Expansion("a"), Expansion("b")), List(Expansion("1"), Expansion("2")))
