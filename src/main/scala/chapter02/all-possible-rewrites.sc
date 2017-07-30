@@ -1,4 +1,4 @@
-import chapter01.Intro
+
 
 abstract class Rhs
 
@@ -41,14 +41,11 @@ def mappend(fn: Expansion => List[Any], lst: List[Expansion]): List[Any] = {
   lst.flatMap(fn)
 }
 
-def combineAll(xlist : List[Expansion], ylist : List[Expansion]) = List[Any] {
-  mappend(((y : Expansion) =>
-                  mapcar((x : Expansion) => {
-                    val Expansion(xval) = x
-                    val Expansion(yval) = y
-                    xval ::: yval
-                  }, xlist)), ylist)
+def combineAll(xlist : List[Expansion], ylist : List[Expansion]) : List[Any] = {
+  mappend((y: Expansion) =>
+    mapcar((x: Expansion) => {
+      val Expansion(xval) = x
+      val Expansion(yval) = y
+      xval ::: yval
+    }, xlist), ylist)
 }
-
-combineAll(List(Expansion("a"), Expansion("b")), List(Expansion("1"), Expansion("2")))
-
