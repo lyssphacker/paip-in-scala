@@ -59,6 +59,13 @@ class IntroTest extends FunSuite {
     assert(Intro.mappend(selfAndDouble, lst1) == List(1, 2, 10, 20, 1000, 2000))
     val lst2 = List("testing", 1, 10, 1000)
     assert(Intro.mappend(selfAndDouble, lst2) == List(1, 2, 10, 20, 1000, 2000))
+
+    def fourElementList(x: Any): List[Any] = {
+      List(List(x, x), List(x, x))
+    }
+
+    val lst3 = List(1, 2)
+    assert(Intro.mappend(fourElementList, lst3) == List(List(1, 1), List(1, 1), List(2, 2), List(2, 2)))
   }
 
   test("testNumbersAndNegations") {
