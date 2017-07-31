@@ -1,7 +1,6 @@
 
-import paip.chapter01.Chapter01
-import paip.chapter02.Chapter02
-import paip.chapter02.Chapter02.{Concat, OneOf, Rhs}
+import paip.chapter01.Chapter01._
+import paip.chapter02.Chapter02._
 
 
 implicit val simpleGrammar = List(
@@ -20,8 +19,8 @@ object Expansion {
 case class Expansion(values: List[Any])
 
 def combineAll(xlist: List[Any], ylist: List[Any]): List[Any] = {
-  Chapter01.mappend((y: Any) =>
-    Chapter02.mapcar((x: Any) => {
+  mappend((y: Any) =>
+    mapcar((x: Any) => {
       val Expansion(xval) = x
       val Expansion(yval) = y
       Expansion(xval ::: yval)
@@ -34,10 +33,10 @@ def generateAll(phrase: Any): List[Any] = {
     case lst: List[Any] =>
       combineAll(generateAll(lst.head), generateAll(lst.tail))
     case s: String =>
-      Chapter02.rewrites(s) match {
+      rewrites(s) match {
         case some: Some[Rhs] =>
           some.get match {
-            case OneOf(value) => Chapter01.mappend(generateAll, value)
+            case OneOf(value) => mappend(generateAll, value)
             case Concat(value) => generateAll(value)
           }
         case None => List(Expansion(phrase))

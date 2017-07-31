@@ -1,7 +1,6 @@
 
-import paip.chapter01.Chapter01
-import paip.chapter02.Chapter02
-import paip.chapter02.Chapter02.{Concat, OneOf, Rhs}
+import paip.chapter01.Chapter01._
+import paip.chapter02.Chapter02._
 
 implicit val biggerGrammar = List(
   "sentence" -> Concat("noun-phrase", "verb-phrase"),
@@ -21,13 +20,13 @@ implicit val biggerGrammar = List(
 
 def generate(phrase: Any): List[Any] = {
   phrase match {
-    case lst: List[Any] => Chapter01.mappend(generate, lst)
+    case lst: List[Any] => mappend(generate, lst)
     case s: String =>
-      Chapter02.rewrites(s) match {
+      rewrites(s) match {
         case some: Some[Rhs] => generate(some.get)
         case None => List(phrase)
       }
-    case OneOf(value) => generate(Chapter02.randomElt(value))
+    case OneOf(value) => generate(randomElt(value))
     case Concat(value) => generate(value)
     case _ => List(phrase)
   }
@@ -35,14 +34,14 @@ def generate(phrase: Any): List[Any] = {
 
 def generateTree(phrase: Any): List[Any] = {
   phrase match {
-    case lst: List[Any] => Chapter02.mapcar(generateTree, lst)
+    case lst: List[Any] => mapcar(generateTree, lst)
     case s: String =>
-      Chapter02.rewrites(s) match {
+      rewrites(s) match {
         case some: Some[Rhs] => s :: generateTree(some.get)
         case None => List(phrase)
       }
     case Concat(value) => generateTree(value)
-    case OneOf(value) => generateTree(Chapter02.randomElt(value))
+    case OneOf(value) => generateTree(randomElt(value))
     case _ => List(phrase)
   }
 }
