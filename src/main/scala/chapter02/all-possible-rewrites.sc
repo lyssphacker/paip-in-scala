@@ -43,36 +43,28 @@ object Expansion {
 
 case class Expansion(values: List[Any])
 
-def combineAll(xlist : List[Any], ylist : List[Any]) : List[Any] = {
-  println("combineAll xlist: " + xlist)
-  println("combineAll ylist: " + ylist)
+def combineAll(xlist: List[Any], ylist: List[Any]): List[Any] = {
   Intro.mappend((y: Any) =>
     mapcar((x: Any) => {
       val Expansion(xval) = x
       val Expansion(yval) = y
-      xval ::: yval
+      Expansion(xval ::: yval)
     }, xlist), ylist)
 }
 
 def generateAll(phrase: Any): List[Any] = {
-  println("generateAll: " + phrase)
   phrase match {
     case Nil => List(Expansion())
     case lst: List[Any] =>
       combineAll(generateAll(lst.head), generateAll(lst.tail))
     case s: String =>
       rewrites(s) match {
-        case some: Some[Rhs] => generateAll(some.get)
+        case some: Some[Rhs] =>
+          some.get match {
+            case OneOf(value) => Intro.mappend(generateAll, value)
+            case Concat(value) => generateAll(value)
+          }
         case None => List(Expansion(phrase))
       }
-    case OneOf(value) => Intro.mappend(generateAll, value)
-    case Concat(value) => generateAll(value)
   }
 }
-
-//combineAll(List(Expansion("a"), Expansion("b")), List(Expansion("1"), Expansion("2")))
-
-generateAll("noun-phrase")
-
-//combineAll(List(Expansion("the"), Expansion("a")),
-//  List(Expansion("man"), Expansion("ball"), Expansion("woman"), Expansion("table")))
