@@ -2,7 +2,7 @@ package paip.chapter02
 
 import scala.util.Random
 
-object Chapter02 {
+object Utils02 {
   abstract class Rhs
 
   case class Concat(lsts: List[String]) extends Rhs

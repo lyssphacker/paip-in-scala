@@ -1,6 +1,6 @@
 package paip.chapter01
 
-object Chapter01 {
+object Utils01 {
   /**
     * Append the results of calling fn on each element of list.
     *
