@@ -4,7 +4,7 @@ object Gps {
 
   case class Op(action: String,
                 preconds: Set[String],
-                addList: Set[String],
+                var addList: Set[String],
                 delList: Set[String] = Set.empty)
 
   implicit val schoolOps = List(
