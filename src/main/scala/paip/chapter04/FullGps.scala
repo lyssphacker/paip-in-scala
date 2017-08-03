@@ -6,16 +6,39 @@ object FullGps {
 
   implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
 
-  implicit var state: Set[String] = Set.empty
+  def gps(state: List[String], goals: Set[String]): List[String] = {
+    val currentState = achieveAll(state, goals, Nil)
+    if (currentState.isDefined)
+      currentState.get.filter((s: String) => !s.contains("executing"))
+    else Nil
+  }
 
-  def applyOp(op: Op): Boolean = {
-    val isApplicable = op.preconds.forall(achieve)
-    if (isApplicable) {
-      println("executing: " + op.action)
-      state = state.diff(op.delList)
-      state = state.union(op.addList)
+  def achieveAll(state: List[String], goals: Set[String],
+                 goalStack: List[String]): Option[List[String]] = {
+    var currentState: Option[List[String]] = None
+    val isCurrentStateEmpty = goals.forall((g: String) => {
+      currentState = achieve(state, g, goalStack)
+      currentState.isEmpty
+    })
+    if (!isCurrentStateEmpty && goals.forall(currentState.get.contains))
+      currentState
+    else
+      None
+  }
+
+  def achieve(state: List[String], goal: String,
+              goalStack: List[String]): Option[List[String]] = {
+    if (state.contains(goal)) Some(state)
+    else if (goalStack.contains(goal)) None
+    else {
+      val goals = findAll(goal, isAppropriate)
+      var result: Option[List[String]] = None
+      goals.find((op: Op) => {
+        result = applyOp(state, goal, op, goalStack)
+        result.isDefined
+      })
+      result
     }
-    isApplicable
   }
 
   def findAll(goal: String, test: (String, Op) => Boolean)
@@ -29,13 +52,15 @@ object FullGps {
     op.addList.contains(goal)
   }
 
-  def achieveAll(goals: List[String]): Boolean = {
-    goals.forall(achieve) && goals.toSet.subsetOf(state)
-  }
-
-  def achieve(goal: String): Boolean = {
-    state.contains(goal) ||
-      findAll(goal, isAppropriate).exists(applyOp)
+  def applyOp(state: List[String], goal: String, op: Op,
+              goalStack: List[String]): Option[List[String]] = {
+    val state2 = achieveAll(state, op.preconds, goal :: goalStack)
+    if (state2.isDefined) {
+      val state2Filtered = state2.get.filter(op.delList.contains(_))
+      Some(state2Filtered ::: op.addList.toList)
+    } else {
+      None
+    }
   }
 
   def isExecuting(action: String): Boolean = {
@@ -51,14 +76,9 @@ object FullGps {
     op
   }
 
-  def gps(stateArg: Set[String], goals: List[String]): String = {
-    state = stateArg
-    if (goals.forall(achieve)) "solved"
-    else "not solved"
-  }
-
   def main(args: Array[String]): Unit = {
-    convertedSchoolOps
-    println()
+    gps(List("son-at-home", "car-needs-batter",
+      "have-money", "have-phone-book"),
+      Set("son-at-school"))
   }
 }
