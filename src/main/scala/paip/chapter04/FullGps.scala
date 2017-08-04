@@ -1,6 +1,7 @@
 package paip.chapter04
 
 import paip.chapter04.Gps.Op
+import paip.chapter04.Utils04._
 
 object FullGps {
 
@@ -28,6 +29,7 @@ object FullGps {
 
   def achieve(state: List[String], goal: String,
               goalStack: List[String]): Option[List[String]] = {
+    dbgIndent("gps", goalStack.size, s"Goal: $goal")
     if (state.contains(goal))
       Some(state)
     else if (goalStack.contains(goal))
@@ -56,6 +58,7 @@ object FullGps {
 
   def applyOp(state: List[String], goal: String, op: Op,
               goalStack: List[String]): Option[List[String]] = {
+    dbgIndent("gps", goalStack.size, "Consider: " + op.action)
     val state2 = achieveAll(state, op.preconds, goal :: goalStack)
     if (state2.isDefined) {
       val state2Filtered = state2.get.filter(op.delList.contains(_))
