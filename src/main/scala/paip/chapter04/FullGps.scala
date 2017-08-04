@@ -31,9 +31,9 @@ object FullGps {
     if (state.contains(goal)) Some(state)
     else if (goalStack.contains(goal)) None
     else {
-      val goals = findAll(goal, isAppropriate)
+      val ops = findAll(goal, isAppropriate)
       var result: Option[List[String]] = None
-      goals.find((op: Op) => {
+      ops.find((op: Op) => {
         result = applyOp(state, goal, op, goalStack)
         result.isDefined
       })
