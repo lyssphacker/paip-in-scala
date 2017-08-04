@@ -30,7 +30,7 @@ object Gps {
       delList = Set("have-money"))
   )
 
-  implicit var state: Set[String] = Set.empty
+  var state: Set[String] = Set.empty
 
   def gps(stateArg: Set[String], goals: List[String]): String = {
     state = stateArg
