@@ -16,9 +16,9 @@ object FullGps {
 
   def achieveAll(state: List[String], goals: List[String],
                  goalStack: List[String]): Option[List[String]] = {
-    var currentState: Option[List[String]] = None
+    var currentState: Option[List[String]] = Some(state)
     val isCurrentStateDefined = goals.forall((g: String) => {
-      currentState = achieve(state, g, goalStack)
+      currentState = achieve(currentState.get, g, goalStack)
       currentState.isDefined
     })
     if (isCurrentStateDefined && goals.forall(currentState.get.contains))
