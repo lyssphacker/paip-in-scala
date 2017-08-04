@@ -7,14 +7,14 @@ object FullGps {
 
   implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
 
-  def gps(state: List[String], goals: Set[String]): List[String] = {
+  def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
     if (currentState.isDefined)
       currentState.get.filter((s: String) => !s.contains("executing"))
     else Nil
   }
 
-  def achieveAll(state: List[String], goals: Set[String],
+  def achieveAll(state: List[String], goals: List[String],
                  goalStack: List[String]): Option[List[String]] = {
     var currentState: Option[List[String]] = None
     val isCurrentStateDefined = goals.forall((g: String) => {
@@ -59,7 +59,7 @@ object FullGps {
   def applyOp(state: List[String], goal: String, op: Op,
               goalStack: List[String]): Option[List[String]] = {
     dbgIndent("gps", goalStack.size, "Consider: " + op.action)
-    val state2 = achieveAll(state, op.preconds, goal :: goalStack)
+    val state2 = achieveAll(state, op.preconds.toList, goal :: goalStack)
     if (state2.isDefined) {
       dbgIndent("gps", goalStack.size, "Action: " + op.action)
       val state2Filtered = state2.get.filter(op.delList.contains(_))
@@ -83,8 +83,10 @@ object FullGps {
   }
 
   def main(args: Array[String]): Unit = {
-    gps(List("son-at-home", "car-needs-batter",
+    debug("gps")
+    val result = gps(List("son-at-home", "car-needs-battery",
       "have-money", "have-phone-book"),
-      Set("son-at-school"))
+      List("son-at-school"))
+    result
   }
 }
