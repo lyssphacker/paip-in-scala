@@ -7,7 +7,7 @@ object FullGps {
   implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
 
   def gps(state: List[String], goals: Set[String]): List[String] = {
-    val currentState = achieveAll(state, goals + "start", Nil)
+    val currentState = achieveAll("start" :: state, goals, Nil)
     if (currentState.isDefined)
       currentState.get.filter((s: String) => !s.contains("executing"))
     else Nil
