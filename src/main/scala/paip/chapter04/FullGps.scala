@@ -28,8 +28,10 @@ object FullGps {
 
   def achieve(state: List[String], goal: String,
               goalStack: List[String]): Option[List[String]] = {
-    if (state.contains(goal)) Some(state)
-    else if (goalStack.contains(goal)) None
+    if (state.contains(goal))
+      Some(state)
+    else if (goalStack.contains(goal))
+      None
     else {
       val ops = findAll(goal, isAppropriate)
       var result: Option[List[String]] = None
