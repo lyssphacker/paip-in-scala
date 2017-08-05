@@ -7,6 +7,8 @@ object FullGps {
 
   implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
 
+//  implicit val convertedBananaOps = MonkeyAndBanans.bananaOps.map(convertOp)
+
   def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
     if (currentState.isDefined)
@@ -89,6 +91,10 @@ object FullGps {
     val result = gps(List("son-at-home", "car-needs-battery",
       "have-money", "have-phone-book"),
       List("son-at-school"))
-    result
+
+//    val result = gps(List("at-door", "on-floor",
+//      "has-ball", "hungry", "chair-at-door"),
+//      List("not-hungry"))
+//    result
   }
 }
