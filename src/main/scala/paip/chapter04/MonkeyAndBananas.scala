@@ -2,7 +2,7 @@ package paip.chapter04
 
 import paip.chapter04.Gps.Op
 
-object MonkeyAndBanans {
+object MonkeyAndBananas {
   implicit val bananaOps = List(
     Op(action = "climb-on-chair",
       preconds = Set("chair-at-middle-room", "at-middle-room", "on-floor"),
