@@ -10,7 +10,9 @@ object FullGps {
   def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
     if (currentState.isDefined)
-      currentState.get.filter((s: String) => s.startsWith("executing"))
+      currentState.get.filter((s: String) => {
+        s.equals("start") || s.startsWith("executing")
+      })
     else Nil
   }
 
