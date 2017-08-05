@@ -2,12 +2,17 @@ package paip.chapter04
 
 import paip.chapter04.Gps.Op
 import paip.chapter04.Utils04._
+import paip.chapter04.Maze._
 
 object FullGps {
 
-  implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
+//  implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
 
 //  implicit val convertedBananaOps = MonkeyAndBanans.bananaOps.map(convertOp)
+
+  implicit val mazeOps = List((1, 2), (2, 3), (3, 4), (4, 9), (9, 14), (9, 8), (8, 7), (7, 12), (12, 13),
+    (12, 11), (11, 6), (11, 16), (16, 17), (17, 22), (21, 22), (22, 23),
+    (23, 18), (23, 24), (24, 19), (19, 20), (20, 15), (15, 10), (10, 5), (20, 25)).flatMap(makeMazeOps).map(convertOp)
 
   def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
@@ -88,13 +93,19 @@ object FullGps {
 
   def main(args: Array[String]): Unit = {
     debug("gps")
-    val result = gps(List("son-at-home", "car-needs-battery",
-      "have-money", "have-phone-book"),
-      List("son-at-school"))
+    // original domain
+//    val result = gps(List("son-at-home", "car-needs-battery",
+//      "have-money", "have-phone-book"),
+//      List("son-at-school"))
 
+    // monkey and bananas domain
 //    val result = gps(List("at-door", "on-floor",
 //      "has-ball", "hungry", "chair-at-door"),
 //      List("not-hungry"))
-//    result
+
+    // maze domain
+    val result = gps(List("at 1"),
+      List("at 25"))
+    result
   }
 }
