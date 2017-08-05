@@ -1,21 +1,21 @@
 package paip.chapter04
 
+import paip.chapter04.BlocksWorld._
 import paip.chapter04.Gps.Op
 import paip.chapter04.Utils04._
-import paip.chapter04.Maze._
-import paip.chapter04.BlocksWorld._
 
 object FullGps {
 
-//  implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
+  //  implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
 
-//  implicit val convertedBananaOps = MonkeyAndBanans.bananaOps.map(convertOp)
+  //  implicit val convertedBananaOps = MonkeyAndBanans.bananaOps.map(convertOp)
 
-//  implicit val convertedMazeOps = List((1, 2), (2, 3), (3, 4), (4, 9), (9, 14), (9, 8), (8, 7), (7, 12), (12, 13),
-//    (12, 11), (11, 6), (11, 16), (16, 17), (17, 22), (21, 22), (22, 23),
-//    (23, 18), (23, 24), (24, 19), (19, 20), (20, 15), (15, 10), (10, 5), (20, 25)).flatMap(makeMazeOps).map(convertOp)
+  //  implicit val convertedMazeOps = List((1, 2), (2, 3), (3, 4), (4, 9), (9, 14), (9, 8), (8, 7), (7, 12), (12, 13),
+  //    (12, 11), (11, 6), (11, 16), (16, 17), (17, 22), (21, 22), (22, 23),
+  //    (23, 18), (23, 24), (24, 19), (19, 20), (20, 15), (15, 10), (10, 5), (20, 25)).flatMap(makeMazeOps).map(convertOp)
 
-  implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b")).map(convertOp)
+  //  implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b")).map(convertOp)
+  implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b", "c")).map(convertOp)
 
   def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
@@ -26,8 +26,8 @@ object FullGps {
     else Nil
   }
 
-  def achieveAll(state: List[String], goals: List[String],
-                 goalStack: List[String]): Option[List[String]] = {
+  def achieveEach(state: List[String], goals: List[String],
+                  goalStack: List[String]): Option[List[String]] = {
     var currentState: Option[List[String]] = Some(state)
     val isCurrentStateDefined = goals.forall((g: String) => {
       currentState = achieve(currentState.get, g, goalStack)
@@ -37,6 +37,21 @@ object FullGps {
       currentState
     else
       None
+  }
+
+  def achieveAll(state: List[String], goals: List[String],
+                 goalStack: List[String]): Option[List[String]] = {
+    var result: Option[List[String]] = None
+    orderings(goals).find((ordering: List[String]) => {
+      result = achieveEach(state, ordering, goalStack)
+      result.isDefined
+    })
+    result
+  }
+
+  def orderings(l: List[String]): List[List[String]] = {
+    if (l.length > 1) List(l, l.reverse)
+    else List(l)
   }
 
   def achieve(state: List[String], goal: String,
@@ -97,23 +112,23 @@ object FullGps {
   def main(args: Array[String]): Unit = {
     debug("gps")
     // original domain
-//    val result = gps(List("son-at-home", "car-needs-battery",
-//      "have-money", "have-phone-book"),
-//      List("son-at-school"))
+    //    val result = gps(List("son-at-home", "car-needs-battery",
+    //      "have-money", "have-phone-book"),
+    //      List("son-at-school"))
 
     // monkey and bananas domain
-//    val result = gps(List("at-door", "on-floor",
-//      "has-ball", "hungry", "chair-at-door"),
-//      List("not-hungry"))
+    //    val result = gps(List("at-door", "on-floor",
+    //      "has-ball", "hungry", "chair-at-door"),
+    //      List("not-hungry"))
 
     // maze domain
-//    val result = gps(List("at 1"),
-//      List("at 25"))
-//    result
+    //    val result = gps(List("at 1"),
+    //      List("at 25"))
+    //    result
 
     // blocks world domain
-    val result = gps(List("a on table", "b on table", "space on a", "space on b", "space on table"),
-      List("a on b", "b on table"))
+    val result = gps(List("c on a", "a on table", "b on table", "space on c", "space on b", "space on table"),
+      List("c on table"))
     result
   }
 }
