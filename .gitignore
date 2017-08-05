@@ -2,3 +2,4 @@
 /project/target/*
 /project/*
 /target/*
+/src/main/scala/paip/chapter04/test.sc
