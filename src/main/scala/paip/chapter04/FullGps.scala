@@ -62,7 +62,7 @@ object FullGps {
     val state2 = achieveAll(state, op.preconds.toList, goal :: goalStack)
     if (state2.isDefined) {
       dbgIndent("gps", goalStack.size, "Action: " + op.action)
-      val state2Filtered = state2.get.filter(op.delList.contains(_))
+      val state2Filtered = state2.get.filter(!op.delList.contains(_))
       Some(state2Filtered ::: op.addList.toList)
     } else {
       None
