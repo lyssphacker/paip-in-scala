@@ -1,12 +1,16 @@
 package paip.chapter04
 
-import paip.chapter04.BlocksWorld._
 import paip.chapter04.Gps.Op
 import paip.chapter04.Utils04._
 
 object FullGps {
 
-  //  implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
+//  implicit val convertedSchoolOps = Gps.schoolOps.map(convertOp)
+
+  implicit val convertedNewSchoolOps = (Op(action = "taxi-son-to-school",
+    preconds = Set("son-at-home", "have-money"),
+    addList = Set("son-at-school"),
+    delList = Set("son-at-home", "have-money")) :: Gps.schoolOps).map(convertOp)
 
   //  implicit val convertedBananaOps = MonkeyAndBanans.bananaOps.map(convertOp)
 
@@ -15,7 +19,7 @@ object FullGps {
   //    (23, 18), (23, 24), (24, 19), (19, 20), (20, 15), (15, 10), (10, 5), (20, 25)).flatMap(makeMazeOps).map(convertOp)
 
   //  implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b")).map(convertOp)
-  implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b", "c")).map(convertOp)
+//  implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b", "c")).map(convertOp)
 
   def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
@@ -140,8 +144,8 @@ object FullGps {
     //    result
 
     // blocks world domain
-    val result = gps(List("a on b", "b on c", "c on table", "space on a", "space on table"),
-      List("c on b", "b on a"))
+    val result = gps(List("son-at-home", "have-money", "car-works"),
+      List("son-at-school", "have-money"))
     result
   }
 }
