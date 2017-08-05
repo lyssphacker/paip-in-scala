@@ -62,7 +62,7 @@ object FullGps {
     else if (goalStack.contains(goal))
       None
     else {
-      val ops = findAll(goal, isAppropriate)
+      val ops = appropriateOps(goal, state)
       var result: Option[List[String]] = None
       ops.find((op: Op) => {
         result = applyOp(state, goal, op, goalStack)
@@ -70,6 +70,19 @@ object FullGps {
       })
       result
     }
+  }
+
+  def appropriateOps(goal: String, state: List[String]): List[Op] = {
+    val ops = FullGps.findAll(goal, FullGps.isAppropriate)
+    val fn = (s: String) => !state.contains(s)
+    ops.sortWith((op1, op2) => {
+      countIf(fn, op1.preconds.toList) <
+        countIf(fn, op2.preconds.toList)
+    })
+  }
+
+  def countIf(fn: String => Boolean, preconds: List[String]): Int = {
+    preconds.count(fn)
   }
 
   def findAll(goal: String, test: (String, Op) => Boolean)
@@ -127,8 +140,8 @@ object FullGps {
     //    result
 
     // blocks world domain
-    val result = gps(List("c on a", "a on table", "b on table", "space on c", "space on b", "space on table"),
-      List("c on table"))
+    val result = gps(List("a on b", "b on c", "c on table", "space on a", "space on table"),
+      List("c on b", "b on a"))
     result
   }
 }
