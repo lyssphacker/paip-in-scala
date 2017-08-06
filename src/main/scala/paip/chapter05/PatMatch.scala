@@ -4,45 +4,57 @@ import scala.language.postfixOps
 
 object PatMatch {
   case class P(value: List[String]) {
-    def first(): P = {
+    def first: P = {
       P(value.head)
     }
 
-    def rest(): P = {
+    def firstValue: String = {
+      value.head
+    }
+
+    def rest: P = {
       P(value.tail)
     }
 
-    def isVariable(): Boolean = {
+    def isVariable: Boolean = {
       value.length == 1 && value.head.startsWith("?")
     }
 
-    override def toString(): String = {
+    def isSegmentVariable: Boolean = {
+      value.head.startsWith("?*")
+    }
+
+    override def toString: String = {
       value mkString " "
     }
 
     def equals(input: I): Boolean = {
-      toString.equals(input.toString)
+      toString().equals(input.toString())
     }
 
-    def isCons(): Boolean = {
+    def isCons: Boolean = {
       value.length > 1
+    }
+
+    def isEmpty: Boolean = {
+      value.isEmpty
     }
   }
 
   case class I(value: List[String]) {
-    override def toString(): String = {
+    override def toString: String = {
       value mkString " "
     }
 
-    def isCons(): Boolean = {
+    def isCons: Boolean = {
       value.length > 1
     }
 
-    def first(): I = {
+    def first: I = {
       I(value.head)
     }
 
-    def rest(): I = {
+    def rest: I = {
       I(value.tail)
     }
   }
@@ -56,11 +68,11 @@ object PatMatch {
   }
 
   case class B(variable: String, value: String) {
-    def bindingVar(): String = {
+    def bindingVar: String = {
       variable
     }
 
-    def bindingVal(): String = {
+    def bindingVal: String = {
       value
     }
   }
@@ -89,13 +101,14 @@ object PatMatch {
     def apply(bindings: B*) = new Bs(bindings map (b => b.variable -> b.value) toMap)
   }
 
-  def patMatch(pattern: P, input: I,
-               bindings: Bs = Bs.noBindings): Bs = {
+  def patMatch(pattern: P, input: I, bindings: Bs = Bs.noBindings): Bs = {
     if (bindings.equals(Bs.fail)) Bs.fail
-    else if (pattern.isVariable())
+    else if (pattern.isSegmentVariable)
+      segmentMatch(pattern, input, bindings)
+    else if (pattern.isVariable)
       matchVariable(pattern.toString, input.toString, bindings)
     else if (pattern.equals(input)) bindings
-    else if (pattern.isCons() && input.isCons())
+    else if (pattern.isCons && input.isCons)
       patMatch(pattern.rest, input.rest,
         patMatch(pattern.first, input.first, bindings))
     else Bs.fail
@@ -112,9 +125,24 @@ object PatMatch {
     bs.bindings.foldLeft(value)((a, b) => a.replaceAllLiterally(b._1, b._2))
   }
 
+  def segmentMatch(pattern: P, input: I, bindings: Bs, start: Int = 0): Bs = {
+    val variable = pattern.firstValue
+    val pat = pattern.rest
+    if (pat.isEmpty)
+      matchVariable(variable, input.toString, bindings)
+    else {
+      val pos = input.value.indexOf(pat.firstValue)
+      if (pos == -1) Bs.fail
+      else {
+        val b2 = patMatch(pat, I(input.value.drop(pos).mkString(" ")), bindings)
+        if (b2.equals(Bs.fail)) segmentMatch(pattern, input, bindings, pos + 1)
+        else matchVariable(variable, input.value.slice(0, pos).mkString(" "), b2)
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-    val result = patMatch(P("i need a ?X"), I("i need a vacation"))
-    val str = substitute(result, "what would it mean to you if you got a ?X ?")
-    str
+    val result = patMatch(P("?*P need ?*X"), I("Mr Hulot and I need a vacation"))
+    result
   }
 }
