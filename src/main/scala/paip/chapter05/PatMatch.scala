@@ -108,8 +108,13 @@ object PatMatch {
     else Bs.fail
   }
 
+  def substitute(bs: Bs, value: String) : String = {
+    bs.bindings.foldLeft(value)((a, b) => a.replaceAllLiterally(b._1, b._2))
+  }
+
   def main(args: Array[String]): Unit = {
-    val result = patMatch(P("this is easy"), I("this is easy"))
-    result
+    val result = patMatch(P("i need a ?X"), I("i need a vacation"))
+    val str = substitute(result, "what would it mean to you if you got a ?X ?")
+    str
   }
 }
