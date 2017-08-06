@@ -3,6 +3,7 @@ package paip.chapter05
 import scala.language.postfixOps
 
 object PatMatch {
+
   case class P(value: List[String]) {
     def first: P = {
       P(value.head)
@@ -121,7 +122,7 @@ object PatMatch {
     else Bs.fail
   }
 
-  def substitute(bs: Bs, value: String) : String = {
+  def substitute(bs: Bs, value: String): String = {
     bs.bindings.foldLeft(value)((a, b) => a.replaceAllLiterally(b._1, b._2))
   }
 
@@ -134,15 +135,19 @@ object PatMatch {
       val pos = input.value.indexOf(pat.firstValue, start)
       if (pos == -1) Bs.fail
       else {
-        val b2 = patMatch(pat, I(input.value.drop(pos).mkString(" ")), bindings)
+        val b2 = patMatch(
+          pat,
+          I(input.value.drop(pos).mkString(" ")),
+          matchVariable(variable, input.value.slice(0, pos).mkString(" "), bindings)
+        )
         if (b2.equals(Bs.fail)) segmentMatch(pattern, input, bindings, pos + 1)
-        else matchVariable(variable, input.value.slice(0, pos).mkString(" "), b2)
+        else b2
       }
     }
   }
 
   def main(args: Array[String]): Unit = {
-    val result = patMatch(P("?*P need ?*X"), I("Mr Hulot and I need a vacation"))
+    val result = patMatch(P("?*X a b ?*X"), I("1 2 a b a b 1 2 a b"))
     result
   }
 }
