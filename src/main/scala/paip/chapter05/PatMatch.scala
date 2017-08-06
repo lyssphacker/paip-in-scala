@@ -1,0 +1,115 @@
+package paip.chapter05
+
+import scala.language.postfixOps
+
+object PatMatch {
+  case class P(value: List[String]) {
+    def first(): P = {
+      P(value.head)
+    }
+
+    def rest(): P = {
+      P(value.tail)
+    }
+
+    def isVariable(): Boolean = {
+      value.length == 1 && value.head.startsWith("?")
+    }
+
+    override def toString(): String = {
+      value mkString " "
+    }
+
+    def equals(input: I): Boolean = {
+      toString.equals(input.toString)
+    }
+
+    def isCons(): Boolean = {
+      value.length > 1
+    }
+  }
+
+  case class I(value: List[String]) {
+    override def toString(): String = {
+      value mkString " "
+    }
+
+    def isCons(): Boolean = {
+      value.length > 1
+    }
+
+    def first(): I = {
+      I(value.head)
+    }
+
+    def rest(): I = {
+      I(value.tail)
+    }
+  }
+
+  object P {
+    def apply(value: String) = new P(value.split(" ").toList)
+  }
+
+  object I {
+    def apply(value: String) = new I(value.split(" ").toList)
+  }
+
+  case class B(variable: String, value: String) {
+    def bindingVar(): String = {
+      variable
+    }
+
+    def bindingVal(): String = {
+      value
+    }
+  }
+
+  case class Bs(bindings: Map[String, String]) {
+    def getBinding(variable: String): Option[B] = {
+      val value: Option[String] = bindings.get(variable)
+      if (value.isEmpty) None
+      else Some(B(variable, value.get))
+    }
+
+    def lookup(variable: String): String = {
+      bindings(variable)
+    }
+
+    def extendBindings(variable: String, value: String): Bs = {
+      if (bindings.equals(Bs.noBindings.bindings)) Bs(Map(variable -> value))
+      else Bs(bindings + (variable -> value))
+    }
+  }
+
+  object Bs {
+    val fail = Bs()
+    val noBindings = Bs(B("t", "t"))
+
+    def apply(bindings: B*) = new Bs(bindings map (b => b.variable -> b.value) toMap)
+  }
+
+  def patMatch(pattern: P, input: I,
+               bindings: Bs = Bs.noBindings): Bs = {
+    if (bindings.equals(Bs.fail)) Bs.fail
+    else if (pattern.isVariable())
+      matchVariable(pattern.toString, input.toString, bindings)
+    else if (pattern.equals(input)) bindings
+    else if (pattern.isCons() && input.isCons())
+      patMatch(pattern.rest, input.rest,
+        patMatch(pattern.first, input.first, bindings))
+    else Bs.fail
+  }
+
+  def matchVariable(variable: String, input: String, bindings: Bs): Bs = {
+    val binding: Option[B] = bindings.getBinding(variable)
+    if (binding.isEmpty) bindings.extendBindings(variable, input)
+    else if (input.equals(binding.get.bindingVal)) bindings
+    else Bs.fail
+  }
+
+  def main(args: Array[String]): Unit = {
+    val result = patMatch(P("this is easy"), I("this is easy"))
+    result
+  }
+}
