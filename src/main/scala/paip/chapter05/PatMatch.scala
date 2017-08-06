@@ -131,7 +131,7 @@ object PatMatch {
     if (pat.isEmpty)
       matchVariable(variable, input.toString, bindings)
     else {
-      val pos = input.value.indexOf(pat.firstValue)
+      val pos = input.value.indexOf(pat.firstValue, start)
       if (pos == -1) Bs.fail
       else {
         val b2 = patMatch(pat, I(input.value.drop(pos).mkString(" ")), bindings)
