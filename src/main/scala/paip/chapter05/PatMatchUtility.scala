@@ -2,7 +2,7 @@ package paip.chapter05
 
 import scala.language.postfixOps
 
-object PatMatch {
+object PatMatchUtility {
 
   case class P(value: List[String]) {
     def first: P = {
