@@ -118,7 +118,7 @@ object PatMatch {
   def matchVariable(variable: String, input: String, bindings: Bs): Bs = {
     val binding: Option[B] = bindings.getBinding(variable)
     if (binding.isEmpty) bindings.extendBindings(variable.replace("*", ""), input)
-    else if (input.equals(binding.get.bindingVal)) bindings
+    else if (input.equalsIgnoreCase(binding.get.bindingVal)) bindings
     else Bs.fail
   }
 
