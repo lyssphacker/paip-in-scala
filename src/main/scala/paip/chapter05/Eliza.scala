@@ -1,6 +1,6 @@
 package paip.chapter05
 
-import paip.chapter05.PatMatchUtility._
+import paip.chapter05.PatMatchFacility._
 import paip.chapter05.Utils05.randomElt
 
 import scala.util.control.Breaks.{break, breakable}
