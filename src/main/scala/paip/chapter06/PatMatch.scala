@@ -77,12 +77,23 @@ object PatMatch {
   }
 
   case class SegmentZeroOrMoreP(value: String) extends SegmentP {
+    private val re = "(?<=\\()[^)]+(?=\\))".r
+
     def secondIndexOf(char: String, str: String): Int = {
       val lst = str.split(char).toList
       lst(0).length + lst(1).length + 2
     }
 
-    def rest: ConsP = ConsP(value.substring(secondIndexOf("#", value)).replace(".", " "))
+    private def getLst: List[String] = {
+      if (value.contains("("))
+        (for(m <- re.findAllIn(value)) yield m).toList
+      else
+        value.substring(secondIndexOf("#", value)).split("\\.").toList
+    }
+
+    def rest: ConsP = ConsP(PatMatch.toPs(getLst))
+
+    def patterns: List[P] = toPs(value.substring(value.indexOf(":")+1).split("\\.").toList)
   }
 
   case class SegmentOneOrMoreP(value: String) extends SegmentP
@@ -312,7 +323,8 @@ object PatMatch {
 //    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
 //    val result = patMatch(ConsP("?x /= ?not:?x"), I("3 /= 4"))
 //    val result = patMatch(ConsP("a ?*#?x#d"), I("a b c d"))
-    val result = patMatch(ConsP("a ?*#?x#?*#?y#d"), I("a b c d"))
+//    val result = patMatch(ConsP("a ?*#?x#(?*#?y#d)"), I("a b c d"))
+    val result = patMatch(ConsP("a ?*#?x#(?*#?y#?x.?y)"), I("a b c d b c d"))
     result
   }
 }
