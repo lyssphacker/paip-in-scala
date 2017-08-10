@@ -23,14 +23,7 @@ object PatMatch {
 
   object ConsP {
     def apply(s: String) = {
-      val ps = s.split(" ").toList.map((s: String) => {
-        if (s.startsWith("?is")) SingleIsP(s)
-        else if (s.startsWith("?or") || s.startsWith("?and") || s.startsWith("?not")) SingleLogicalP(s)
-        else if (s.contains("#")) SegmentP(s)
-        else if (s.startsWith("?")) VarP(s)
-        else ConstP(s)
-      })
-      new ConsP(ps)
+      new ConsP(toPs(s.split(" ").toList))
     }
   }
 
@@ -43,7 +36,7 @@ object PatMatch {
   }
 
   case class SingleLogicalP(value: String) extends SingleP {
-    def patterns: List[String] = value.substring(value.indexOf(":")+1).split("\\.").toList
+    def patterns: List[P] = toPs(value.substring(value.indexOf(":")+1).split("\\.").toList)
   }
 
   case class SingleIsP(value: String) extends SingleP with Is {
@@ -192,10 +185,10 @@ object PatMatch {
   }
 
   def matchOr(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
-    def matchOrPatterns(patterns: List[String], input: I, bindings: Bs): Bs = {
+    def matchOrPatterns(patterns: List[P], input: I, bindings: Bs): Bs = {
       if (patterns.isEmpty) Bs.fail
       else {
-        val newBindings = patMatch(ConstP(patterns.head), input, bindings)
+        val newBindings = patMatch(patterns.head, input, bindings)
         if (newBindings.equals(Bs.fail)) matchOrPatterns(patterns.tail, input, bindings)
         else newBindings
       }
@@ -204,15 +197,11 @@ object PatMatch {
   }
 
   def matchAnd(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
-    def matchAndPatterns(patterns: List[String], input: I, bindings: Bs): Bs = {
+    def matchAndPatterns(patterns: List[P], input: I, bindings: Bs): Bs = {
       if (bindings.equals(Bs.fail)) Bs.fail
       else if (patterns.isEmpty) bindings
       else {
-        val pattern = patterns.head
-        if (pattern.startsWith("?is"))
-          matchAndPatterns(patterns.tail, input, patMatch(SingleIsP(pattern), input, bindings))
-        else
-          matchAndPatterns(patterns.tail, input, patMatch(SingleLogicalP(pattern), input, bindings))
+        matchAndPatterns(patterns.tail, input, patMatch(patterns.head, input, bindings))
       }
     }
     matchAndPatterns(p.patterns, input, bindings)
@@ -265,9 +254,20 @@ object PatMatch {
     }
   }
 
+  def toPs(lst: List[String]): List[P] = {
+    lst.map((s: String) => {
+      if (s.startsWith("?is")) SingleIsP(s)
+      else if (s.startsWith("?or") || s.startsWith("?and") || s.startsWith("?not")) SingleLogicalP(s)
+      else if (s.contains("#")) SegmentP(s)
+      else if (s.startsWith("?")) VarP(s)
+      else ConstP(s)
+    })
+  }
+
   def main(args: Array[String]): Unit = {
+//    val result = patMatch(ConsP("?x ?or:<.=.> ?y"), I("3 < 4"))
 //    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
-    val result = patMatch(ConsP("?x /= ?not:?x"), I("x = 3"))
+    val result = patMatch(ConsP("?x /= ?not:?x"), I("3 /= 4"))
     result
   }
 }
