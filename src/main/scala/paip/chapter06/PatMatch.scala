@@ -101,7 +101,7 @@ object PatMatch {
   object SegmentP {
     val segmentZeroOneOrMoreMatchMap = Map[String, (SegmentZeroOneOrMoreP, I, Bs, Int) => Bs](
       "?*" -> segmentZeroOrMoreMatch _,
-      "?*" -> segmentZeroOrMoreMatch _
+      "?+" -> segmentOneOrMoreMatch _
     )
 
     val segmentZeroOrOneMatchMap = Map[String, (SegmentZeroOrOneP, I, Bs) => Bs](
@@ -269,8 +269,8 @@ object PatMatch {
     }
   }
 
-  def segmentZeroOrOneMatch(p: SegmentZeroOneOrMoreP, input: I, bindings: Bs): Bs = {
-    segmentZeroOrOneMatch(p, input, bindings)
+  def segmentOneOrMoreMatch(p: SegmentZeroOneOrMoreP, input: I, bindings: Bs, start: Int): Bs = {
+    segmentZeroOrMoreMatch(p, input, bindings, start)
   }
 
   def segmentZeroOrOneMatch(p: SegmentZeroOrOneP, input: I, bindings: Bs): Bs = {
@@ -322,8 +322,8 @@ object PatMatch {
 //    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
 //    val result = patMatch(ConsP("?x /= ?not:?x"), I("3 /= 4"))
 //    val result = patMatch(ConsP("a ?*#?x#d"), I("a b c d"))
-//    val result = patMatch(ConsP("a ?*#?x#(?*#?y#d)"), I("a b c d"))
-    val result = patMatch(ConsP("a ?*#?x#(?*#?y#?x.?y)"), I("a b c d b c d"))
+    val result = patMatch(ConsP("a ?+#?x#(?+#?y#d)"), I("a b c d"))
+//    val result = patMatch(ConsP("a ?*#?x#(?*#?y#?x.?y)"), I("a b c d b c d"))
     result
   }
 }
