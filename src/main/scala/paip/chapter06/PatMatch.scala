@@ -25,7 +25,7 @@ object PatMatch {
     def apply(s: String) = {
       val ps = s.split(" ").toList.map((s: String) => {
         if (s.startsWith("?is")) SingleIsP(s)
-        else if (s.contains("?or") || s.contains("?and") || s.contains("?not")) SingleLogicalP(s)
+        else if (s.startsWith("?or") || s.startsWith("?and") || s.startsWith("?not")) SingleLogicalP(s)
         else if (s.contains("#")) SegmentP(s)
         else if (s.startsWith("?")) VarP(s)
         else ConstP(s)
@@ -43,7 +43,7 @@ object PatMatch {
   }
 
   case class SingleLogicalP(value: String) extends SingleP {
-    def patterns: List[String] = value.split(":")(1).split("\\.").toList
+    def patterns: List[String] = value.substring(value.indexOf(":")+1).split("\\.").toList
   }
 
   case class SingleIsP(value: String) extends SingleP with Is {
@@ -54,7 +54,8 @@ object PatMatch {
 
   object SingleIsP {
     val predicateFnMap = Map[String, (Seq[String]) => Boolean](
-      "isInt" -> isInt _
+      "isInt" -> isInt _,
+      "isOdd" -> isOdd _
     )
   }
 
@@ -184,7 +185,7 @@ object PatMatch {
 
   def matchIs(p: SingleIsP, input: I, bindings: Bs): Bs = {
     val variable = p.variable
-    val predicate = p.asInstanceOf[SingleIsP].predicate
+    val predicate = p.predicate
     val newBindings = patMatch(VarP(variable), input, bindings)
     if (newBindings.equals(Bs.fail) || !SingleIsP.predicateFnMap(predicate).apply(input.value)) Bs.fail
     else newBindings
@@ -203,7 +204,18 @@ object PatMatch {
   }
 
   def matchAnd(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
-    Bs()
+    def matchAndPatterns(patterns: List[String], input: I, bindings: Bs): Bs = {
+      if (bindings.equals(Bs.fail)) Bs.fail
+      else if (patterns.isEmpty) bindings
+      else {
+        val pattern = patterns.head
+        if (pattern.startsWith("?is"))
+          matchAndPatterns(patterns.tail, input, patMatch(SingleIsP(pattern), input, bindings))
+        else
+          matchAndPatterns(patterns.tail, input, patMatch(SingleLogicalP(pattern), input, bindings))
+      }
+    }
+    matchAndPatterns(p.patterns, input, bindings)
   }
 
   def matchNot(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
@@ -236,8 +248,23 @@ object PatMatch {
     }
   }
 
+  def isOdd(s: String*): Boolean = {
+    if (s.length != 1) false
+    else {
+      var result = true
+      val value = s(0)
+      try {
+        val asInt = value.toInt
+        result = asInt %2 != 0
+      } catch {
+        case e: NumberFormatException => result = false
+      }
+      result
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-    val result = patMatch(ConsP("?x ?or:<.=.> ?y"), I("3 < 4"))
+    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
     result
   }
 }
