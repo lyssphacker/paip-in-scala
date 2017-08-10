@@ -219,7 +219,9 @@ object PatMatch {
   }
 
   def matchNot(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
-    Bs()
+    val result = matchOr(p, input, bindings)
+    if (result.equals(Bs.fail)) bindings
+    else Bs.fail
   }
 
   def segmentZeroOrMoreMatch(p: AtomP, input: I, bindings: Bs): Bs = {
@@ -264,7 +266,8 @@ object PatMatch {
   }
 
   def main(args: Array[String]): Unit = {
-    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
+//    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
+    val result = patMatch(ConsP("?x /= ?not:?x"), I("x = 3"))
     result
   }
 }
