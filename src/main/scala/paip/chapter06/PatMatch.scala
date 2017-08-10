@@ -8,17 +8,9 @@ object PatMatch {
   abstract class AtomP extends P {
     def value: String
 
-    def isSegmentPattern: Boolean = value.contains("#")
-
-    def isSinglePattern: Boolean = value.contains(":")
-
-    def isVariable: Boolean = value.startsWith("?")
-
     def key: String = ???
 
     def variable: String = ???
-
-    def equals(input: I): Boolean = value.equals(input.toString())
   }
 
   case class ConsP(ps: List[P]) extends P {
@@ -50,7 +42,9 @@ object PatMatch {
     override def key: String = value.split(":")(0)
   }
 
-  case class SingleLogicalP(value: String) extends SingleP
+  case class SingleLogicalP(value: String) extends SingleP {
+    def patterns: List[String] = value.split(":")(1).split("\\.").toList
+  }
 
   case class SingleIsP(value: String) extends SingleP with Is {
     override def variable: String = value.split(":")(1)
@@ -188,35 +182,43 @@ object PatMatch {
     else Bs.fail
   }
 
-  def matchIs(pattern: SingleIsP, input: I, bindings: Bs): Bs = {
-    val variable = pattern.variable
-    val predicate = pattern.asInstanceOf[SingleIsP].predicate
+  def matchIs(p: SingleIsP, input: I, bindings: Bs): Bs = {
+    val variable = p.variable
+    val predicate = p.asInstanceOf[SingleIsP].predicate
     val newBindings = patMatch(VarP(variable), input, bindings)
     if (newBindings.equals(Bs.fail) || !SingleIsP.predicateFnMap(predicate).apply(input.value)) Bs.fail
     else newBindings
   }
 
-  def matchOr(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
+  def matchOr(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
+    def matchOrPatterns(patterns: List[String], input: I, bindings: Bs): Bs = {
+      if (patterns.isEmpty) Bs.fail
+      else {
+        val newBindings = patMatch(ConstP(patterns.head), input, bindings)
+        if (newBindings.equals(Bs.fail)) matchOrPatterns(patterns.tail, input, bindings)
+        else newBindings
+      }
+    }
+    matchOrPatterns(p.patterns, input, bindings)
+  }
+
+  def matchAnd(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def matchAnd(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
+  def matchNot(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def matchNot(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
+  def segmentZeroOrMoreMatch(p: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def segmentZeroOrMoreMatch(pattern: AtomP, input: I, bindings: Bs): Bs = {
+  def segmentOneOrMoreMatch(p: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def segmentOneOrMoreMatch(pattern: AtomP, input: I, bindings: Bs): Bs = {
-    Bs()
-  }
-
-  def segmentZeroOrOneMatch(pattern: AtomP, input: I, bindings: Bs): Bs = {
+  def segmentZeroOrOneMatch(p: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
@@ -235,7 +237,7 @@ object PatMatch {
   }
 
   def main(args: Array[String]): Unit = {
-    val result = patMatch(ConsP("x = ?is:?n:isInt"), I("x = 34"))
+    val result = patMatch(ConsP("?x ?or:<.=.> ?y"), I("3 < 4"))
     result
   }
 }
