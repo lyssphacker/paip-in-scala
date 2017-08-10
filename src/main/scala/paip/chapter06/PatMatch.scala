@@ -1,83 +1,64 @@
 package paip.chapter06
 
 object PatMatch {
+
   abstract class P {
-    def value: List[String]
+  }
 
-    def rest: P
+  abstract class AtomP extends P {
+    def value: String
 
-    def first: P
+    def isSegmentPattern: Boolean = value.contains("#")
+
+    def isSinglePattern: Boolean = value.contains(":")
+
+    def isVariable: Boolean = value.startsWith("?")
 
     def key: String = ???
 
-    def variable: String = value.head
+    def variable: String = ???
 
-    def isSegmentPattern: Boolean = value.head.contains("#")
-
-    def isSinglePattern: Boolean = value.head.contains(":")
-
-    def firstValue: String = value.head
-
-    def isVariable: Boolean = value.length == 1 && value.head.startsWith("?")
-
-    override def toString: String = value mkString " "
-
-    def equals(input: I): Boolean = toString().equals(input.toString())
-
-    def isCons: Boolean = value.length > 1
-
-    def isEmpty: Boolean = value.isEmpty
+    def equals(input: I): Boolean = value.equals(input.toString())
   }
 
-  case class ConsP(value: List[String]) extends P {
-    override def first: ConsP = ConsP(value.head)
+  case class ConsP(ps: List[P]) extends P {
+    def first: P = ps.head
 
-    override def rest: ConsP = ConsP(value.tail)
+    def rest: ConsP = ConsP(ps.tail)
+
+    def isEmpty: Boolean = ps.isEmpty
   }
 
   object ConsP {
-    def apply(value: String) = new ConsP(value.split(" ").toList)
+    def apply(s: String) = {
+      val ps = s.split(" ").toList.map((s: String) => {
+        if (s.startsWith("?is")) SingleIsP(s)
+        else if (s.contains("?or") || s.contains("?and") || s.contains("?not")) SingleLogicalP(s)
+        else if (s.contains("#")) SegmentP(s)
+        else VarConstP(s)
+      })
+      new ConsP(ps)
+    }
   }
 
-  case class VarConstP(value: List[String]) extends P {
-    override def first: VarConstP = VarConstP(value)
+  case class VarConstP(value: String) extends AtomP
 
-    override def rest: VarConstP = VarConstP(value)
+  abstract class SingleP extends AtomP {
+    override def key: String = value.split(":")(0)
   }
 
-  object VarConstP {
-    def apply(value: String) = new VarConstP(List(value))
-  }
+  case class SingleLogicalP(value: String) extends SingleP
 
-  abstract class SingleP extends P {
-    override def key: String = value.head.split(":")(0)
-  }
+  case class SingleIsP(value: String) extends SingleP with Is {
+    override def variable: String = value.split(":")(1)
 
-  case class SingleLogicalP(value: List[String]) extends SingleP {
-    override def first: SingleLogicalP = SingleLogicalP(value.head)
-
-    override def rest: SingleLogicalP = SingleLogicalP(value.tail)
-  }
-
-  object SingleLogicalP {
-    def apply(value: String) = new SingleLogicalP(value.split(" ").toList)
-  }
-
-  case class SingleIsP(value: List[String]) extends SingleP with Is {
-    override def first: SingleIsP = SingleIsP(value.head)
-
-    override def rest: SingleIsP = SingleIsP(value.tail)
-
-    override def variable: String = value.head.split(":")(1)
-
-    override def predicate: String = value.head.split(":")(2)
+    override def predicate: String = value.split(":")(2)
   }
 
   object SingleIsP {
     val predicateFnMap = Map[String, (Seq[String]) => Boolean](
-      "isNumber" -> isNumber _
+      "isInt" -> isInt _
     )
-    def apply(value: String) = new SingleIsP(value.split(" ").toList)
   }
 
   trait Is {
@@ -93,14 +74,10 @@ object PatMatch {
     )
   }
 
-  case class SegmentP(value: List[String]) extends P {
-    override def rest: SegmentP = SegmentP(value.tail)
+  case class SegmentP(value: String) extends AtomP {
+    override def key: String = value.split("#")(0)
 
-    override def first: SegmentP = SegmentP(value.head)
-
-    override def key: String = value.head.split("#")(0)
-
-    override def variable: String = value.head.split("#")(1)
+    override def variable: String = value.split("#")(1)
   }
 
   object SegmentP {
@@ -109,18 +86,16 @@ object PatMatch {
       "?+" -> segmentOneOrMoreMatch _,
       "??" -> segmentZeroOrOneMatch _
     )
-
-    def apply(value: String) = new SegmentP(value.split(" ").toList)
   }
 
   case class I(value: List[String]) {
     override def toString: String = value mkString " "
 
-    def isCons: Boolean = value.length > 1
-
     def first: I = I(value.head)
 
     def rest: I = I(value.tail)
+
+    def isEmpty: Boolean = value.isEmpty
   }
 
   object I {
@@ -158,33 +133,36 @@ object PatMatch {
   }
 
   def patMatch(pattern: P, input: I, bindings: Bs = Bs.noBindings): Bs = {
-    if (bindings.equals(Bs.fail)) Bs.fail
-    else if (pattern.isSegmentPattern)
-      segmentMatcher(pattern, input, bindings)
-    else if (pattern.isSinglePattern)
-      singleMatcher(pattern, input, bindings)
-    else if (pattern.isVariable)
-      matchVariable(pattern.toString, input.toString, bindings)
-    else if (pattern.equals(input)) bindings
-    else if (pattern.isCons && input.isCons)
-      patMatch(pattern.rest, input.rest,
-        patMatch(pattern.first, input.first, bindings))
-    else Bs.fail
+    pattern match {
+      case cp: ConsP =>
+        if (input.isEmpty && cp.isEmpty) bindings
+        else patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
+      case p: AtomP =>
+        if (bindings.equals(Bs.fail)) Bs.fail
+        else if (p.isSegmentPattern)
+          segmentMatcher(p, input, bindings)
+        else if (p.isSinglePattern)
+          singleMatcher(p, input, bindings)
+        else if (p.isVariable)
+          matchVariable(p.value, input.toString, bindings)
+        else if (p.equals(input)) bindings
+        else Bs.fail
+    }
   }
 
-  def segmentMatcher(pattern: P, input: I, bindings: Bs): Bs = {
+  def segmentMatcher(pattern: AtomP, input: I, bindings: Bs): Bs = {
     getSegmentMatchFn(pattern).apply(pattern, input, bindings)
   }
 
-  def getSegmentMatchFn(p: P): ((P, I, Bs) => Bs) = {
+  def getSegmentMatchFn(p: AtomP): ((AtomP, I, Bs) => Bs) = {
     SegmentP.segmentMatch(p.key)
   }
 
-  def singleMatcher(pattern: P, input: I, bindings: Bs): Bs = {
+  def singleMatcher(pattern: AtomP, input: I, bindings: Bs): Bs = {
     getSingleMatchFn(pattern).apply(pattern, input, bindings)
   }
 
-  def getSingleMatchFn(p: P): ((P, I, Bs) => Bs) = {
+  def getSingleMatchFn(p: AtomP): ((AtomP, I, Bs) => Bs) = {
     SingleP.singleMatch(p.key)
   }
 
@@ -195,7 +173,7 @@ object PatMatch {
     else Bs.fail
   }
 
-  def matchIs(pattern: P, input: I, bindings: Bs): Bs = {
+  def matchIs(pattern: AtomP, input: I, bindings: Bs): Bs = {
     val variable = pattern.variable
     val predicate = pattern.asInstanceOf[SingleIsP].predicate
     val newBindings = patMatch(VarConstP(variable), input, bindings)
@@ -203,36 +181,46 @@ object PatMatch {
     else newBindings
   }
 
-  def matchOr(pattern: P, input: I, bindings: Bs): Bs = {
+  def matchOr(pattern: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def matchAnd(pattern: P, input: I, bindings: Bs): Bs = {
+  def matchAnd(pattern: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def matchNot(pattern: P, input: I, bindings: Bs): Bs = {
+  def matchNot(pattern: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def segmentZeroOrMoreMatch(pattern: P, input: I, bindings: Bs): Bs = {
+  def segmentZeroOrMoreMatch(pattern: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def segmentOneOrMoreMatch(pattern: P, input: I, bindings: Bs): Bs = {
+  def segmentOneOrMoreMatch(pattern: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def segmentZeroOrOneMatch(pattern: P, input: I, bindings: Bs): Bs = {
+  def segmentZeroOrOneMatch(pattern: AtomP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def isNumber(s: String*): Boolean = {
-    true
+  def isInt(s: String*): Boolean = {
+    if (s.length != 1) false
+    else {
+      var result = true
+      val value = s(0)
+      try {
+        value.toInt
+      } catch {
+        case e: NumberFormatException => result = false
+      }
+      result
+    }
   }
 
   def main(args: Array[String]): Unit = {
-    val result = patMatch(ConsP("x = ?is:?n:isNumber"), I("x = 34"))
+    val result = patMatch(ConsP("x = ?is:?n:isInt"), I("x = 34"))
     result
   }
 }
