@@ -13,8 +13,8 @@ object PatMatch {
     def variable: String = ???
   }
 
-  case class ConsP(ps: List[P]) extends P {
-    def first: P = ps.head
+  case class ConsP(ps: List[AtomP]) extends P {
+    def first: AtomP = ps.head
 
     def rest: ConsP = ConsP(ps.tail)
 
@@ -57,26 +57,38 @@ object PatMatch {
   }
 
   object SingleP {
-    val singleLogicalMatch = Map(
+    val singleLogicalMatchMap = Map(
       "?or" -> matchOr _,
       "?and" -> matchAnd _,
       "?not" -> matchNot _
     )
 
-    val singleIsMatch = Map(
+    val singleIsMatchMap = Map(
       "?is" -> matchIs _
     )
   }
 
-  case class SegmentP(value: String) extends AtomP {
+  abstract class SegmentP extends AtomP {
     override def key: String = value.split("#")(0)
 
     override def variable: String = value.split("#")(1)
   }
 
+  case class SegmentZeroOrMoreP(value: String) extends SegmentP {
+    def rest: ConsP = ConsP(value.substring(value.lastIndexOf("#")+1).replace(".", " "))
+  }
+
+  case class SegmentOneOrMoreP(value: String) extends SegmentP
+
+  case class SegmentZeroOrOneP(value: String) extends SegmentP
+
+
   object SegmentP {
-    val segmentMatch = Map(
-      "?*" -> segmentZeroOrMoreMatch _,
+    val segmentZeroOrMoreMatchMap = Map[String, (SegmentZeroOrMoreP, I, Bs, Int) => Bs](
+      "?*" -> segmentZeroOrMoreMatch _
+    )
+
+    val segmentMatchMap = Map[String, (SegmentP, I, Bs) => Bs](
       "?+" -> segmentOneOrMoreMatch _,
       "??" -> segmentZeroOrOneMatch _
     )
@@ -130,13 +142,18 @@ object PatMatch {
     if (bindings.equals(Bs.fail)) Bs.fail
     else {
       pattern match {
-        case cp: ConsP =>
-          if (input.isEmpty && cp.isEmpty) bindings
-          else patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
+        case p: SegmentZeroOrMoreP => segmentZeroOrMoreMatcher(p, input, bindings)
         case p: SegmentP => segmentMatcher(p, input, bindings)
         case p: SingleIsP => singleIsMatcher(p, input, bindings)
         case p: SingleLogicalP => singleLogicalMatcher(p, input, bindings)
         case p: VarP => matchVariable(p.value, input.toString, bindings)
+        case cp: ConsP =>
+          if (input.isEmpty && cp.isEmpty) bindings
+          else
+            cp.first match {
+              case p: SegmentZeroOrMoreP => patMatch(p, input, bindings)
+              case _ => patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
+            }
         case p: ConstP =>
           if (p.value.equals(input.toString)) bindings
           else Bs.fail
@@ -145,28 +162,20 @@ object PatMatch {
 
   }
 
-  def segmentMatcher(pattern: AtomP, input: I, bindings: Bs): Bs = {
-    getSegmentMatchFn(pattern).apply(pattern, input, bindings)
+  def segmentMatcher(p: SegmentP, input: I, bindings: Bs): Bs = {
+    SegmentP.segmentMatchMap(p.key).apply(p, input, bindings)
   }
 
-  def getSegmentMatchFn(p: AtomP): ((AtomP, I, Bs) => Bs) = {
-    SegmentP.segmentMatch(p.key)
+  def segmentZeroOrMoreMatcher(p: SegmentZeroOrMoreP, input: I, bindings: Bs): Bs = {
+    SegmentP.segmentZeroOrMoreMatchMap(p.key).apply(p, input, bindings, 0)
   }
 
-  def singleIsMatcher(pattern: SingleIsP, input: I, bindings: Bs): Bs = {
-    getSingleIsMatchFn(pattern).apply(pattern, input, bindings)
+  def singleIsMatcher(p: SingleIsP, input: I, bindings: Bs): Bs = {
+    SingleP.singleIsMatchMap(p.key).apply(p, input, bindings)
   }
 
-  def singleLogicalMatcher(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
-    getSingleLogicalMatchFn(pattern).apply(pattern, input, bindings)
-  }
-
-  def getSingleIsMatchFn(p: SingleIsP): ((SingleIsP, I, Bs) => Bs) = {
-    SingleP.singleIsMatch(p.key)
-  }
-
-  def getSingleLogicalMatchFn(p: SingleLogicalP): ((SingleLogicalP, I, Bs) => Bs) = {
-    SingleP.singleLogicalMatch(p.key)
+  def singleLogicalMatcher(p: SingleLogicalP, input: I, bindings: Bs): Bs = {
+    SingleP.singleLogicalMatchMap(p.key).apply(p, input, bindings)
   }
 
   def matchVariable(variable: String, input: String, bindings: Bs): Bs = {
@@ -213,8 +222,24 @@ object PatMatch {
     else Bs.fail
   }
 
-  def segmentZeroOrMoreMatch(p: AtomP, input: I, bindings: Bs): Bs = {
-    Bs()
+  def segmentZeroOrMoreMatch(p: SegmentZeroOrMoreP, input: I, bindings: Bs, start: Int = 0): Bs = {
+    val variable = p.variable
+    val pat = p.rest
+    if (pat.isEmpty)
+      matchVariable(variable, input.toString, bindings)
+    else {
+      val pos = input.value.indexOf(pat.first.value, start)
+      if (pos == -1) Bs.fail
+      else {
+        val b2 = patMatch(
+          pat,
+          I(input.value.drop(pos).mkString(" ")),
+          matchVariable(variable, input.value.slice(0, pos).mkString(" "), bindings)
+        )
+        if (b2.equals(Bs.fail)) segmentZeroOrMoreMatch(p, input, bindings, pos + 1)
+        else b2
+      }
+    }
   }
 
   def segmentOneOrMoreMatch(p: AtomP, input: I, bindings: Bs): Bs = {
@@ -254,11 +279,13 @@ object PatMatch {
     }
   }
 
-  def toPs(lst: List[String]): List[P] = {
+  def toPs(lst: List[String]): List[AtomP] = {
     lst.map((s: String) => {
       if (s.startsWith("?is")) SingleIsP(s)
       else if (s.startsWith("?or") || s.startsWith("?and") || s.startsWith("?not")) SingleLogicalP(s)
-      else if (s.contains("#")) SegmentP(s)
+      else if (s.startsWith("?*")) SegmentZeroOrMoreP(s)
+      else if (s.startsWith("?+")) SegmentOneOrMoreP(s)
+      else if (s.startsWith("??")) SegmentZeroOrOneP(s)
       else if (s.startsWith("?")) VarP(s)
       else ConstP(s)
     })
@@ -266,8 +293,9 @@ object PatMatch {
 
   def main(args: Array[String]): Unit = {
 //    val result = patMatch(ConsP("?x ?or:<.=.> ?y"), I("3 < 4"))
-//    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
-    val result = patMatch(ConsP("?x /= ?not:?x"), I("3 /= 4"))
+    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
+//    val result = patMatch(ConsP("?x /= ?not:?x"), I("3 /= 4"))
+//    val result = patMatch(ConsP("a ?*#?x#d"), I("a b c d"))
     result
   }
 }
