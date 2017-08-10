@@ -35,13 +35,16 @@ object PatMatch {
         if (s.startsWith("?is")) SingleIsP(s)
         else if (s.contains("?or") || s.contains("?and") || s.contains("?not")) SingleLogicalP(s)
         else if (s.contains("#")) SegmentP(s)
-        else VarConstP(s)
+        else if (s.startsWith("?")) VarP(s)
+        else ConstP(s)
       })
       new ConsP(ps)
     }
   }
 
-  case class VarConstP(value: String) extends AtomP
+  case class VarP(value: String) extends AtomP
+
+  case class ConstP(value: String) extends AtomP
 
   abstract class SingleP extends AtomP {
     override def key: String = value.split(":")(0)
@@ -66,11 +69,14 @@ object PatMatch {
   }
 
   object SingleP {
-    val singleMatch = Map(
-      "?is" -> matchIs _,
+    val singleLogicalMatch = Map(
       "?or" -> matchOr _,
       "?and" -> matchAnd _,
       "?not" -> matchNot _
+    )
+
+    val singleIsMatch = Map(
+      "?is" -> matchIs _
     )
   }
 
@@ -133,21 +139,22 @@ object PatMatch {
   }
 
   def patMatch(pattern: P, input: I, bindings: Bs = Bs.noBindings): Bs = {
-    pattern match {
-      case cp: ConsP =>
-        if (input.isEmpty && cp.isEmpty) bindings
-        else patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
-      case p: AtomP =>
-        if (bindings.equals(Bs.fail)) Bs.fail
-        else if (p.isSegmentPattern)
-          segmentMatcher(p, input, bindings)
-        else if (p.isSinglePattern)
-          singleMatcher(p, input, bindings)
-        else if (p.isVariable)
-          matchVariable(p.value, input.toString, bindings)
-        else if (p.equals(input)) bindings
-        else Bs.fail
+    if (bindings.equals(Bs.fail)) Bs.fail
+    else {
+      pattern match {
+        case cp: ConsP =>
+          if (input.isEmpty && cp.isEmpty) bindings
+          else patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
+        case p: SegmentP => segmentMatcher(p, input, bindings)
+        case p: SingleIsP => singleIsMatcher(p, input, bindings)
+        case p: SingleLogicalP => singleLogicalMatcher(p, input, bindings)
+        case p: VarP => matchVariable(p.value, input.toString, bindings)
+        case p: ConstP =>
+          if (p.value.equals(input.toString)) bindings
+          else Bs.fail
+      }
     }
+
   }
 
   def segmentMatcher(pattern: AtomP, input: I, bindings: Bs): Bs = {
@@ -158,12 +165,20 @@ object PatMatch {
     SegmentP.segmentMatch(p.key)
   }
 
-  def singleMatcher(pattern: AtomP, input: I, bindings: Bs): Bs = {
-    getSingleMatchFn(pattern).apply(pattern, input, bindings)
+  def singleIsMatcher(pattern: SingleIsP, input: I, bindings: Bs): Bs = {
+    getSingleIsMatchFn(pattern).apply(pattern, input, bindings)
   }
 
-  def getSingleMatchFn(p: AtomP): ((AtomP, I, Bs) => Bs) = {
-    SingleP.singleMatch(p.key)
+  def singleLogicalMatcher(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
+    getSingleLogicalMatchFn(pattern).apply(pattern, input, bindings)
+  }
+
+  def getSingleIsMatchFn(p: SingleIsP): ((SingleIsP, I, Bs) => Bs) = {
+    SingleP.singleIsMatch(p.key)
+  }
+
+  def getSingleLogicalMatchFn(p: SingleLogicalP): ((SingleLogicalP, I, Bs) => Bs) = {
+    SingleP.singleLogicalMatch(p.key)
   }
 
   def matchVariable(variable: String, input: String, bindings: Bs): Bs = {
@@ -173,23 +188,23 @@ object PatMatch {
     else Bs.fail
   }
 
-  def matchIs(pattern: AtomP, input: I, bindings: Bs): Bs = {
+  def matchIs(pattern: SingleIsP, input: I, bindings: Bs): Bs = {
     val variable = pattern.variable
     val predicate = pattern.asInstanceOf[SingleIsP].predicate
-    val newBindings = patMatch(VarConstP(variable), input, bindings)
+    val newBindings = patMatch(VarP(variable), input, bindings)
     if (newBindings.equals(Bs.fail) || !SingleIsP.predicateFnMap(predicate).apply(input.value)) Bs.fail
     else newBindings
   }
 
-  def matchOr(pattern: AtomP, input: I, bindings: Bs): Bs = {
+  def matchOr(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def matchAnd(pattern: AtomP, input: I, bindings: Bs): Bs = {
+  def matchAnd(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
-  def matchNot(pattern: AtomP, input: I, bindings: Bs): Bs = {
+  def matchNot(pattern: SingleLogicalP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
