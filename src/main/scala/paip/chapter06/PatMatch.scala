@@ -19,6 +19,8 @@ object PatMatch {
     def rest: ConsP = ConsP(ps.tail)
 
     def isEmpty: Boolean = ps.isEmpty
+
+    def length: Int = ps.length
   }
 
   object ConsP {
@@ -75,7 +77,12 @@ object PatMatch {
   }
 
   case class SegmentZeroOrMoreP(value: String) extends SegmentP {
-    def rest: ConsP = ConsP(value.substring(value.lastIndexOf("#")+1).replace(".", " "))
+    def secondIndexOf(char: String, str: String): Int = {
+      val lst = str.split(char).toList
+      lst(0).length + lst(1).length + 2
+    }
+
+    def rest: ConsP = ConsP(value.substring(secondIndexOf("#", value)).replace(".", " "))
   }
 
   case class SegmentOneOrMoreP(value: String) extends SegmentP
@@ -151,7 +158,7 @@ object PatMatch {
           if (input.isEmpty && cp.isEmpty) bindings
           else
             cp.first match {
-              case p: SegmentZeroOrMoreP => patMatch(p, input, bindings)
+              case p: SegmentZeroOrMoreP if cp.length == 1 => patMatch(p, input, bindings)
               case _ => patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
             }
         case p: ConstP =>
@@ -228,17 +235,26 @@ object PatMatch {
     if (pat.isEmpty)
       matchVariable(variable, input.toString, bindings)
     else {
-      val pos = input.value.indexOf(pat.first.value, start)
-      if (pos == -1) Bs.fail
+      val pos = firstMatchPos(pat.first, input, start)
+      if (pos.isEmpty) Bs.fail
       else {
         val b2 = patMatch(
           pat,
-          I(input.value.drop(pos).mkString(" ")),
-          matchVariable(variable, input.value.slice(0, pos).mkString(" "), bindings)
+          I(input.value.drop(pos.get).mkString(" ")),
+          matchVariable(variable, input.value.slice(0, pos.get).mkString(" "), bindings)
         )
-        if (b2.equals(Bs.fail)) segmentZeroOrMoreMatch(p, input, bindings, pos + 1)
+        if (b2.equals(Bs.fail)) segmentZeroOrMoreMatch(p, input, bindings, pos.get + 1)
         else b2
       }
+    }
+  }
+
+  def firstMatchPos(pat1: P, input: I, start: Int): Option[Int] = {
+    pat1 match {
+      case p: ConstP => Some(input.value.indexOf(p.value, start))
+      case _ =>
+        if (start < input.value.length) Some(start)
+        else None
     }
   }
 
@@ -293,9 +309,10 @@ object PatMatch {
 
   def main(args: Array[String]): Unit = {
 //    val result = patMatch(ConsP("?x ?or:<.=.> ?y"), I("3 < 4"))
-    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
+//    val result = patMatch(ConsP("x = ?and:?is:?n:isInt.?is:?n:isOdd"), I("x = 3"))
 //    val result = patMatch(ConsP("?x /= ?not:?x"), I("3 /= 4"))
 //    val result = patMatch(ConsP("a ?*#?x#d"), I("a b c d"))
+    val result = patMatch(ConsP("a ?*#?x#?*#?y#d"), I("a b c d"))
     result
   }
 }
