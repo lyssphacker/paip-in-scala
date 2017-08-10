@@ -76,7 +76,7 @@ object PatMatch {
     override def variable: String = value.split("#")(1)
   }
 
-  case class SegmentZeroOrMoreP(value: String) extends SegmentP {
+  case class SegmentZeroOneOrMoreP(value: String) extends SegmentP {
     private val re = "(?<=\\()[^)]+(?=\\))".r
 
     def secondIndexOf(char: String, str: String): Int = {
@@ -96,19 +96,16 @@ object PatMatch {
     def patterns: List[P] = toPs(value.substring(value.indexOf(":")+1).split("\\.").toList)
   }
 
-  case class SegmentOneOrMoreP(value: String) extends SegmentP
-
   case class SegmentZeroOrOneP(value: String) extends SegmentP
 
-
   object SegmentP {
-    val segmentZeroOrMoreMatchMap = Map[String, (SegmentZeroOrMoreP, I, Bs, Int) => Bs](
+    val segmentZeroOneOrMoreMatchMap = Map[String, (SegmentZeroOneOrMoreP, I, Bs, Int) => Bs](
+      "?*" -> segmentZeroOrMoreMatch _,
       "?*" -> segmentZeroOrMoreMatch _
     )
 
-    val segmentMatchMap = Map[String, (SegmentP, I, Bs) => Bs](
-      "?+" -> segmentOneOrMoreMatch _,
-      "??" -> segmentZeroOrOneMatch _
+    val segmentZeroOrOneMatchMap = Map[String, (SegmentZeroOrOneP, I, Bs) => Bs](
+      "?+" -> segmentZeroOrOneMatch _
     )
   }
 
@@ -160,8 +157,8 @@ object PatMatch {
     if (bindings.equals(Bs.fail)) Bs.fail
     else {
       pattern match {
-        case p: SegmentZeroOrMoreP => segmentZeroOrMoreMatcher(p, input, bindings)
-        case p: SegmentP => segmentMatcher(p, input, bindings)
+        case p: SegmentZeroOneOrMoreP => segmentZeroOrMoreMatcher(p, input, bindings)
+        case p: SegmentZeroOrOneP => segmentZeroOrOneMatcher(p, input, bindings)
         case p: SingleIsP => singleIsMatcher(p, input, bindings)
         case p: SingleLogicalP => singleLogicalMatcher(p, input, bindings)
         case p: VarP => matchVariable(p.value, input.toString, bindings)
@@ -169,7 +166,7 @@ object PatMatch {
           if (input.isEmpty && cp.isEmpty) bindings
           else
             cp.first match {
-              case p: SegmentZeroOrMoreP if cp.length == 1 => patMatch(p, input, bindings)
+              case p: SegmentZeroOneOrMoreP if cp.length == 1 => patMatch(p, input, bindings)
               case _ => patMatch(cp.rest, input.rest, patMatch(cp.first, input.first, bindings))
             }
         case p: ConstP =>
@@ -180,12 +177,15 @@ object PatMatch {
 
   }
 
-  def segmentMatcher(p: SegmentP, input: I, bindings: Bs): Bs = {
-    SegmentP.segmentMatchMap(p.key).apply(p, input, bindings)
+  def segmentZeroOrOneMatcher(p: SegmentZeroOrOneP, input: I, bindings: Bs): Bs = {
+    SegmentP.segmentZeroOrOneMatchMap(p.key).apply(p, input, bindings)
   }
 
-  def segmentZeroOrMoreMatcher(p: SegmentZeroOrMoreP, input: I, bindings: Bs): Bs = {
-    SegmentP.segmentZeroOrMoreMatchMap(p.key).apply(p, input, bindings, 0)
+  def segmentZeroOrMoreMatcher(p: SegmentZeroOneOrMoreP, input: I, bindings: Bs): Bs = {
+    if (p.key.equals("?*"))
+      SegmentP.segmentZeroOneOrMoreMatchMap(p.key).apply(p, input, bindings, 0)
+    else
+      SegmentP.segmentZeroOneOrMoreMatchMap(p.key).apply(p, input, bindings, 1)
   }
 
   def singleIsMatcher(p: SingleIsP, input: I, bindings: Bs): Bs = {
@@ -240,7 +240,7 @@ object PatMatch {
     else Bs.fail
   }
 
-  def segmentZeroOrMoreMatch(p: SegmentZeroOrMoreP, input: I, bindings: Bs, start: Int = 0): Bs = {
+  def segmentZeroOrMoreMatch(p: SegmentZeroOneOrMoreP, input: I, bindings: Bs, start: Int = 0): Bs = {
     val variable = p.variable
     val pat = p.rest
     if (pat.isEmpty)
@@ -269,11 +269,11 @@ object PatMatch {
     }
   }
 
-  def segmentOneOrMoreMatch(p: AtomP, input: I, bindings: Bs): Bs = {
-    Bs()
+  def segmentZeroOrOneMatch(p: SegmentZeroOneOrMoreP, input: I, bindings: Bs): Bs = {
+    segmentZeroOrOneMatch(p, input, bindings)
   }
 
-  def segmentZeroOrOneMatch(p: AtomP, input: I, bindings: Bs): Bs = {
+  def segmentZeroOrOneMatch(p: SegmentZeroOrOneP, input: I, bindings: Bs): Bs = {
     Bs()
   }
 
@@ -310,8 +310,7 @@ object PatMatch {
     lst.map((s: String) => {
       if (s.startsWith("?is")) SingleIsP(s)
       else if (s.startsWith("?or") || s.startsWith("?and") || s.startsWith("?not")) SingleLogicalP(s)
-      else if (s.startsWith("?*")) SegmentZeroOrMoreP(s)
-      else if (s.startsWith("?+")) SegmentOneOrMoreP(s)
+      else if (s.startsWith("?*") || s.startsWith("?+")) SegmentZeroOneOrMoreP(s)
       else if (s.startsWith("??")) SegmentZeroOrOneP(s)
       else if (s.startsWith("?")) VarP(s)
       else ConstP(s)
