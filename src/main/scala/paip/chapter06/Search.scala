@@ -1,20 +1,20 @@
 package paip.chapter06
 
-import paip.DebugUtils.dbg
+import paip.DebugUtils.{dbg, debug}
 
 object Search {
   def binaryTree(x: Int): List[Int] = {
     List(2 * x, 1 + 2 * x)
   }
 
-  def is(value: Int): Int => Boolean = {
-    (x: Int) => x.equals(value)
+  def is[T](value: T): T => Boolean = {
+    (x: T) => x.equals(value)
   }
 
-  def treeSearch(states: List[Int],
-                 isGoal: Int => Boolean,
-                 successors: Int => List[Int],
-                 combiner: (List[Int], List[Int]) => List[Int]): Option[Int] = {
+  def treeSearch[T](states: List[T],
+                    isGoal: T => Boolean,
+                    successors: T => List[T],
+                    combiner: (List[T], List[T]) => List[T]): Option[T] = {
     dbg("search", "Search: " + states)
     if (states.isEmpty) None
     else if (isGoal.apply(states.head)) Some(states.head)
@@ -25,24 +25,24 @@ object Search {
       combiner)
   }
 
-  def append(lst1: List[Int], lst2: List[Int]): List[Int] = {
+  def append[T](lst1: List[T], lst2: List[T]): List[T] = {
     lst1 ::: lst2
   }
 
-  def depthFirstSearch(start: Int,
-                       isGoal: Int => Boolean,
-                       successors: Int => List[Int]): Option[Int] = {
-    treeSearch(List(start), isGoal, successors, append)
+  def depthFirstSearch[T](start: T,
+                          isGoal: T => Boolean,
+                          successors: T => List[T]): Option[T] = {
+    treeSearch(List(start), isGoal, successors, append[T])
   }
 
-  def prepend(lst1: List[Int], lst2: List[Int]): List[Int] = {
+  def prepend[T](lst1: List[T], lst2: List[T]): List[T] = {
     append(lst2, lst1)
   }
 
-  def breadthFirstSearch(start: Int,
-                         isGoal: Int => Boolean,
-                         successors: Int => List[Int]): Option[Int] = {
-    treeSearch(List(start), isGoal, successors, prepend)
+  def breadthFirstSearch[T](start: T,
+                            isGoal: T => Boolean,
+                            successors: T => List[T]): Option[T] = {
+    treeSearch(List(start), isGoal, successors, prepend[T])
   }
 
   def finiteBinaryTree(n: Int): Int => List[Int] = {
@@ -53,15 +53,22 @@ object Search {
     (x: Int) => Math.abs(x - num)
   }
 
-  def sorter(costFn: Int => Int): (List[Int], List[Int]) => List[Int] = {
-    (n: List[Int], o: List[Int]) =>
-      append(n, o).sortWith(costFn(_) < costFn(_))
+  def lessThan[S](first: S, second: S): Boolean = {
+    first match {
+      case i: Int => i < second.asInstanceOf[Int]
+      case d: Double => d < second.asInstanceOf[Double]
+    }
   }
 
-  def bestFirstSearch(start: Int,
-                      isGoal: Int => Boolean,
-                      successors: Int => List[Int],
-                      costFn: Int => Int): Option[Int] = {
+  def sorter[T, S](costFn: T => S): (List[T], List[T]) => List[T] = {
+    (n: List[T], o: List[T]) =>
+      append(n, o).sortWith((e1: T, e2: T) => lessThan[S](costFn(e1), costFn(e2)))
+  }
+
+  def bestFirstSearch[T](start: T,
+                         isGoal: T => Boolean,
+                         successors: T => List[T],
+                         costFn: T => Int): Option[T] = {
     treeSearch(List(start), isGoal, successors, sorter(costFn))
   }
 
@@ -71,16 +78,21 @@ object Search {
       else price - x
   }
 
-  def beamSearch(start: Int,
-                 isGoal: Int => Boolean,
-                 successors: Int => List[Int],
-                 costFn: Int => Int,
-                 beamWidth: Int): Option[Int] = {
+  def beamSearch[T, S](start: T,
+                    isGoal: T => Boolean,
+                    successors: T => List[T],
+                    costFn: T => S,
+                    beamWidth: Int): Option[T] = {
     treeSearch(List(start), isGoal, successors,
-      (o: List[Int], n: List[Int]) => {
+      (o: List[T], n: List[T]) => {
         val sorted = sorter(costFn).apply(o, n)
         if (beamWidth > sorted.length) sorted
         else sorted.slice(0, beamWidth)
       })
+  }
+
+  def main(args: Array[String]): Unit = {
+    debug("search")
+    beamSearch[Int, Int](1, is(12), binaryTree, priceIsRight(12), 2)
   }
 }
