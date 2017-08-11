@@ -2,7 +2,7 @@
 /project/target/*
 /project/*
 /target/*
-/src/main/scala/paip/test.sc
-/src/main/scala/paip/Test.scala
-/src/main/scala/paip/Test1.java
-/src/main/scala/paip/test1.sc
+/src/main/scala/paip/test/Test.scala
+/src/main/scala/paip/test/Test1.java
+/src/main/scala/paip/test/test.sc
+/src/main/scala/paip/test/test1.sc
