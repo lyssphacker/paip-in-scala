@@ -1,6 +1,6 @@
 package paip.chapter06
 
-import scala.math.{BigDecimal, asin, cos, pow, sin, sqrt}
+import scala.math.{BigDecimal, asin, cos, pow, sin, sqrt, Pi}
 
 object Cities {
   case class City(name: String, long: Double, lat: Double)
