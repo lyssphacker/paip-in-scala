@@ -1,6 +1,6 @@
-package paip.chapter04
+package paip
 
-object Utils04 {
+object DebugUtils {
   var dbgIds: Set[String] = Set.empty
 
   implicit def intWithTimes(n: Int) = new {
