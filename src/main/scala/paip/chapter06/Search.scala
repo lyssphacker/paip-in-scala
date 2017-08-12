@@ -46,7 +46,7 @@ object Search {
   }
 
   def finiteBinaryTree(n: Int): Int => List[Int] = {
-    (x: Int) => binaryTree(x).filter((child: Int) => child < n)
+    (x: Int) => binaryTree(x).filter((child: Int) => child <= n)
   }
 
   def diff(num: Int): Int => Int = {
@@ -91,8 +91,22 @@ object Search {
       })
   }
 
+  def iterWideSearch[T, S](start: T,
+                           isGoal: T => Boolean,
+                           successors: T => List[T],
+                           costFn: T => S,
+                           width: Int = 1,
+                           max: Int = 100): Option[T] = {
+    dbg("search", s"Width $width")
+    if (width <= max) {
+      val result = beamSearch(start, isGoal, successors, costFn, width)
+      if (result.isDefined) result
+      else iterWideSearch(start, isGoal, successors, costFn, width = width + 1, max = max)
+    } else None
+  }
+
   def main(args: Array[String]): Unit = {
     debug("search")
-    beamSearch[Int, Int](1, is(12), binaryTree, priceIsRight(12), 2)
+    iterWideSearch[Int, Int](1, is[Int](12), finiteBinaryTree(15), diff(12))
   }
 }
