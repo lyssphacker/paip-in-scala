@@ -102,10 +102,10 @@ object FullGps {
 
   def applyOp(state: List[String], goal: String, op: Op,
               goalStack: List[String]): Option[List[String]] = {
-    dbgIndent("gps", goalStack.size, "Consider: " + op.action)
+    dbgIndent("gps", goalStack.size, s"Consider: ${op.action}")
     val state2 = achieveAll(state, op.preconds.toList, goal :: goalStack)
     if (state2.isDefined) {
-      dbgIndent("gps", goalStack.size, "Action: " + op.action)
+      dbgIndent("gps", goalStack.size, s"Action: ${op.action}")
       val state2Filtered = state2.get.filter(!op.delList.contains(_))
       Some(state2Filtered ::: op.addList.toList)
     } else {

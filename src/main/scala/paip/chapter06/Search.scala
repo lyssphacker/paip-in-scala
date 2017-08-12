@@ -15,7 +15,7 @@ object Search {
                     isGoal: T => Boolean,
                     successors: T => List[T],
                     combiner: (List[T], List[T]) => List[T]): Option[T] = {
-    dbg("search", "Search: " + states)
+    dbg("search", s"Search: ${states}")
     if (states.isEmpty) None
     else if (isGoal.apply(states.head)) Some(states.head)
     else treeSearch(
