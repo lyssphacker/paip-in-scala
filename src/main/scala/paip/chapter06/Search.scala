@@ -1,6 +1,7 @@
 package paip.chapter06
 
 import paip.DebugUtils.{dbg, debug}
+import paip.chapter06.Cities.City
 
 object Search {
   def binaryTree(x: Int): List[Int] = {
@@ -15,7 +16,7 @@ object Search {
                     isGoal: T => Boolean,
                     successors: T => List[T],
                     combiner: (List[T], List[T]) => List[T]): Option[T] = {
-    dbg("search", s"Search: ${states}")
+    dbg("search", s"Search: $states")
     if (states.isEmpty) None
     else if (isGoal.apply(states.head)) Some(states.head)
     else treeSearch(
@@ -105,8 +106,61 @@ object Search {
     } else None
   }
 
+  def stateEqual[T](s1: T, s2: T): Boolean = {
+    s1 match {
+      case s: Int => s.equals(s2.asInstanceOf[Int])
+      case s: City => s.equals(s2.asInstanceOf[City])
+    }
+  }
+
+  def graphSearch[T](states: List[T],
+                     isGoal: T => Boolean,
+                     successors: T => List[T],
+                     combiner: (List[T], List[T]) => List[T],
+                     test: (T, T) => Boolean,
+                     oldStates: List[T] = Nil): Option[T] = {
+    dbg("search", s"Search: $states")
+    if (states.isEmpty) None
+    else if (isGoal.apply(states.head)) Some(states.head)
+    else {
+      graphSearch(
+        combiner.apply(newStates(states, successors, stateEqual, oldStates), states.tail),
+        isGoal,
+        successors,
+        combiner,
+        stateEqual,
+        adjoin(states.head, oldStates, stateEqual)
+      )
+    }
+  }
+
+  def member[T](state: T, states: List[T], test: (T, T) => Boolean): Boolean = {
+    states exists ((s: T) => stateEqual(state, s))
+  }
+
+  def newStates[T](states: List[T],
+                   successors: T => List[T],
+                   stateEqual: (T, T) => Boolean,
+                   oldStates: List[T]): List[T] = {
+    successors.apply(states.head).filter((state: T) => {
+      !member[T](state, states, stateEqual) && !member[T](state, oldStates, stateEqual)
+    })
+  }
+
+  def adjoin[T](item: T, lst: List[T], test: (T, T) => Boolean): List[T] = {
+    val result = lst.find((el: T) => {
+      test.apply(el, item)
+    })
+    if (result.isEmpty) item :: lst
+    else lst
+  }
+
+  def next2(x: Int): List[Int] = {
+    List(x+1, x+2)
+  }
+
   def main(args: Array[String]): Unit = {
     debug("search")
-    iterWideSearch[Int, Int](1, is[Int](12), finiteBinaryTree(15), diff(12))
+    graphSearch[Int](List(1), is[Int](6), next2, prepend, stateEqual)
   }
 }
