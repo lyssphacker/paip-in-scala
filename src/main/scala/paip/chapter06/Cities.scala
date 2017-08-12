@@ -1,9 +1,17 @@
 package paip.chapter06
 
-import scala.math.{BigDecimal, asin, cos, pow, sin, sqrt, Pi}
+import paip.chapter06.Search._
+
+import scala.math._
 
 object Cities {
   case class City(name: String, long: Double, lat: Double)
+
+  object City {
+    def cityName(c: City): String = {
+      c.name
+    }
+  }
 
   implicit val cities = List(
     City("Atlanta", 84.23, 33.45),
@@ -46,7 +54,7 @@ object Cities {
   }
 
   case class Point(x: Double, y: Double, z: Double) {
-    def distance(p: Point) : Double = {
+    def distance(p: Point): Double = {
       val x2 = pow(x - p.x, 2)
       val y2 = pow(y - p.y, 2)
       val z2 = pow(z - p.z, 2)
@@ -75,8 +83,79 @@ object Cities {
   }
 
 
-  def neighbors(name: String)(implicit cities: List[City]): List[City] = {
-    val ci: City = city(name)
-    cities.filter((c: City) => !c.equals(ci) && airDistance(c, ci) < 1000.0)
+  def neighbors(city: City)(implicit cities: List[City]): List[City] = {
+    cities.filter((c: City) => !c.equals(city) && airDistance(c, city) < 1000.0)
+  }
+
+  def trip(start: City, dest: City): Option[City] = {
+    beamSearch[City, Double](
+      start,
+      Search.is[City](dest),
+      neighbors,
+      (c: City) => airDistance(c, dest),
+      1
+    )
+  }
+
+  case class Path(state: City, previous: Option[Path] = None,
+                  costSoFar: Double = 0.0, totalCost: Double = 0.0) {
+    override def toString = s"#<Path to $state cost $totalCost>"
+  }
+
+  object Path {
+    def pathTotalCost(p: Path): Double = {
+      p.totalCost
+    }
+
+    def pathState(path: Path): City = {
+      path.state
+    }
+  }
+
+  def is[T, S](value: T, key: S => T, test: (T, T) => Boolean = cityEquals _): S => Boolean = {
+    (x: S) => test.apply(value, key.apply(x))
+  }
+
+
+  def cityEquals(c1: City, c2: City): Boolean = {
+    c1.equals(c2)
+  }
+
+  def pathSaver(successors: City => List[City],
+                costFn: (City, City) => Double,
+                costLeftFn: City => Double): Path => List[Path] = {
+    (oldPath: Path) => {
+      val oldState = oldPath.state
+      successors.apply(oldState).map((newState: City) => {
+        val oldCost = oldPath.costSoFar + costFn.apply(oldState, newState)
+        Path(state = newState, previous = Some(oldPath),
+          costSoFar = oldCost, totalCost = oldCost + costLeftFn.apply(newState))
+      })
+    }
+  }
+
+  def trip(start: City, dest: City, beamWidth: Int = 1): Option[Path] = {
+    beamSearch[Path, Double](
+      Path(state = start),
+      is[City, Path](dest, Path.pathState),
+      pathSaver(neighbors, airDistance, (c: City) => airDistance(c, dest)),
+      Path.pathTotalCost,
+      beamWidth
+    )
+  }
+
+  def showCityPath(path: Path): Unit = {
+    println(s"#<Path ${path.totalCost} km: ${mapPath(City.cityName, path).reverse.mkString(" - ")}>")
+  }
+
+  def mapPath(fn: City => String, path: Path): List[String] = {
+    if (path.previous.isEmpty) List(fn.apply(path.state))
+    else fn.apply(path.state) :: mapPath(fn, path.previous.get)
+  }
+
+  def main(args: Array[String]): Unit = {
+    //    showCityPath(trip(city("San-Francisco"), city("Boston"), 1).get)
+    //    showCityPath(trip(city("Boston"), city("San-Francisco"), 3).get)
+    showCityPath(trip(city("Boston"), city("San-Francisco"), 1).get)
   }
 }
