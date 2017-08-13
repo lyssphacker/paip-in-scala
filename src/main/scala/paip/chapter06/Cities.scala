@@ -97,58 +97,40 @@ object Cities {
     )
   }
 
-  case class Path(state: City, previous: Option[Path] = None,
+  case class Path[T](state: T, previous: Option[Path[T]] = None,
                   costSoFar: Double = 0.0, totalCost: Double = 0.0) {
     override def toString = s"#<Path to $state cost $totalCost>"
   }
 
   object Path {
-    def pathTotalCost(p: Path): Double = {
+    def pathTotalCost[T](p: Path[T]): Double = {
       p.totalCost
     }
 
-    def pathState(path: Path): City = {
+    def pathState[T](path: Path[T]): T = {
       path.state
     }
   }
-
-  def is[T, S](value: T, key: S => T, test: (T, T) => Boolean = cityEquals _): S => Boolean = {
-    (x: S) => test.apply(value, key.apply(x))
-  }
-
 
   def cityEquals(c1: City, c2: City): Boolean = {
     c1.equals(c2)
   }
 
-  def pathSaver(successors: City => List[City],
-                costFn: (City, City) => Double,
-                costLeftFn: City => Double): Path => List[Path] = {
-    (oldPath: Path) => {
-      val oldState = oldPath.state
-      successors.apply(oldState).map((newState: City) => {
-        val oldCost = oldPath.costSoFar + costFn.apply(oldState, newState)
-        Path(state = newState, previous = Some(oldPath),
-          costSoFar = oldCost, totalCost = oldCost + costLeftFn.apply(newState))
-      })
-    }
-  }
-
-  def trip(start: City, dest: City, beamWidth: Int = 1): Option[Path] = {
-    beamSearch[Path, Double](
+  def trip(start: City, dest: City, beamWidth: Int = 1): Option[Path[City]] = {
+    beamSearch[Path[City], Double](
       Path(state = start),
-      is[City, Path](dest, Path.pathState),
+      is[City, Path[City]](dest, Path.pathState),
       pathSaver(neighbors, airDistance, (c: City) => airDistance(c, dest)),
       Path.pathTotalCost,
       beamWidth
     )
   }
 
-  def showCityPath(path: Path): Unit = {
+  def showCityPath(path: Path[City]): Unit = {
     println(s"#<Path ${path.totalCost} km: ${mapPath(City.cityName, path).reverse.mkString(" - ")}>")
   }
 
-  def mapPath(fn: City => String, path: Path): List[String] = {
+  def mapPath[T](fn: T => String, path: Path[T]): List[String] = {
     if (path.previous.isEmpty) List(fn.apply(path.state))
     else fn.apply(path.state) :: mapPath(fn, path.previous.get)
   }

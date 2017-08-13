@@ -1,7 +1,7 @@
 package paip.chapter06
 
 import paip.DebugUtils.{dbg, debug}
-import paip.chapter06.Cities.City
+import paip.chapter06.Cities.{City, Path, cityEquals}
 
 object Search {
   def binaryTree(x: Int): List[Int] = {
@@ -157,6 +157,23 @@ object Search {
 
   def next2(x: Int): List[Int] = {
     List(x+1, x+2)
+  }
+
+  def is[T, S](value: T, key: S => T, test: (T, T) => Boolean = cityEquals _): S => Boolean = {
+    (x: S) => test.apply(value, key.apply(x))
+  }
+
+  def pathSaver[T](successors: T => List[T],
+                   costFn: (T, T) => Double,
+                   costLeftFn: T => Double): Path[T] => List[Path[T]] = {
+    (oldPath: Path[T]) => {
+      val oldState = oldPath.state
+      successors.apply(oldState).map((newState: T) => {
+        val oldCost = oldPath.costSoFar + costFn.apply(oldState, newState)
+        Path(state = newState, previous = Some(oldPath),
+          costSoFar = oldCost, totalCost = oldCost + costLeftFn.apply(newState))
+      })
+    }
   }
 
   def main(args: Array[String]): Unit = {
