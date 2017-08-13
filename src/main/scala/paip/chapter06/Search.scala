@@ -1,7 +1,7 @@
 package paip.chapter06
 
 import paip.DebugUtils.{dbg, debug}
-import paip.chapter06.Cities.{City, Path, cityEquals}
+import paip.chapter06.Cities.{City, cityEquals}
 
 object Search {
   def binaryTree(x: Int): List[Int] = {
@@ -80,10 +80,10 @@ object Search {
   }
 
   def beamSearch[T, S](start: T,
-                    isGoal: T => Boolean,
-                    successors: T => List[T],
-                    costFn: T => S,
-                    beamWidth: Int): Option[T] = {
+                       isGoal: T => Boolean,
+                       successors: T => List[T],
+                       costFn: T => S,
+                       beamWidth: Int): Option[T] = {
     treeSearch(List(start), isGoal, successors,
       (o: List[T], n: List[T]) => {
         val sorted = sorter(costFn).apply(o, n)
@@ -156,7 +156,7 @@ object Search {
   }
 
   def next2(x: Int): List[Int] = {
-    List(x+1, x+2)
+    List(x + 1, x + 2)
   }
 
   def is[T, S](value: T, key: S => T, test: (T, T) => Boolean = cityEquals _): S => Boolean = {
@@ -173,6 +173,26 @@ object Search {
         Path(state = newState, previous = Some(oldPath),
           costSoFar = oldCost, totalCost = oldCost + costLeftFn.apply(newState))
       })
+    }
+  }
+
+  def mapPath[T](fn: T => String, path: Path[T]): List[String] = {
+    if (path.previous.isEmpty) List(fn.apply(path.state))
+    else fn.apply(path.state) :: mapPath(fn, path.previous.get)
+  }
+
+  case class Path[T](state: T, previous: Option[Path[T]] = None,
+                     costSoFar: Double = 0.0, totalCost: Double = 0.0) {
+    override def toString = s"#<Path to $state cost $totalCost>"
+  }
+
+  object Path {
+    def pathTotalCost[T](p: Path[T]): Double = {
+      p.totalCost
+    }
+
+    def pathState[T](path: Path[T]): T = {
+      path.state
     }
   }
 

@@ -97,21 +97,6 @@ object Cities {
     )
   }
 
-  case class Path[T](state: T, previous: Option[Path[T]] = None,
-                  costSoFar: Double = 0.0, totalCost: Double = 0.0) {
-    override def toString = s"#<Path to $state cost $totalCost>"
-  }
-
-  object Path {
-    def pathTotalCost[T](p: Path[T]): Double = {
-      p.totalCost
-    }
-
-    def pathState[T](path: Path[T]): T = {
-      path.state
-    }
-  }
-
   def cityEquals(c1: City, c2: City): Boolean = {
     c1.equals(c2)
   }
@@ -128,11 +113,6 @@ object Cities {
 
   def showCityPath(path: Path[City]): Unit = {
     println(s"#<Path ${path.totalCost} km: ${mapPath(City.cityName, path).reverse.mkString(" - ")}>")
-  }
-
-  def mapPath[T](fn: T => String, path: Path[T]): List[String] = {
-    if (path.previous.isEmpty) List(fn.apply(path.state))
-    else fn.apply(path.state) :: mapPath(fn, path.previous.get)
   }
 
   def main(args: Array[String]): Unit = {
