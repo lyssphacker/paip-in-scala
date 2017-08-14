@@ -24,10 +24,12 @@ object FullGps {
   def gps(state: List[String], goals: List[String]): List[String] = {
     val currentState = achieveAll("start" :: state, goals, Nil)
     if (currentState.isDefined)
-      currentState.get.filter((s: String) => {
-        s.equals("start") || s.startsWith("executing")
-      })
+      currentState.get.filter(isAction)
     else Nil
+  }
+
+  def isAction(s: String): Boolean = {
+    s.equals("start") || s.startsWith("executing")
   }
 
   def achieveEach(state: List[String], goals: List[String],
@@ -129,9 +131,9 @@ object FullGps {
   def main(args: Array[String]): Unit = {
     debug("gps")
     // original domain
-    //    val result = gps(List("son-at-home", "car-needs-battery",
-    //      "have-money", "have-phone-book"),
-    //      List("son-at-school"))
+//        val result = gps(List("son-at-home", "car-needs-battery",
+//          "have-money", "have-phone-book"),
+//          List("son-at-school"))
 
     // monkey and bananas domain
     //    val result = gps(List("at-door", "on-floor",
