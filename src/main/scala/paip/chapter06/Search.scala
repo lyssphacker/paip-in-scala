@@ -196,8 +196,73 @@ object Search {
     }
   }
 
+  def findPath[T](state: T, paths: List[Path[T]],
+                  stateEqual: (T, T) => Boolean, key: Path[T] => T): Option[Path[T]] = {
+    paths.find((p: Path[T]) => stateEqual.apply(key.apply(p), state))
+  }
+
+  def pathState[T](path: Path[T]): T = {
+    path.state
+  }
+
+  def betterPath[T](path1: Path[T], path2: Path[T]): Boolean = {
+    path1.totalCost < path2.totalCost
+  }
+
+  def insertPath[T](path: Path[T], paths: List[Path[T]]): List[Path[T]] = {
+    List.concat(List(path), paths).sortWith((p1: Path[T], p2: Path[T]) => p1.totalCost < p2.totalCost)
+  }
+
+  def pathStates[T](path: Path[T]): List[T] = {
+    if (path.previous.isEmpty) List(path.state)
+    else path.state :: pathStates(path.previous.get)
+  }
+
+  def aStarSearch[T](paths: List[Path[T]],
+                     isGoal: T => Boolean,
+                     successors: T => List[T],
+                     costFn: (T, T) => Double,
+                     costLeftFn: T => Double,
+                     stateEqual: (T, T) => Boolean,
+                     oldPaths: List[Path[T]]): Option[(Path[T], List[Path[T]])] = {
+    dbg("search", s"Paths: $paths")
+    if (paths.isEmpty) None
+    else if (isGoal.apply(paths.head.state)) Some((paths.head, paths))
+    else {
+      val path = paths.head
+      val state = path.state
+      var newPaths = paths.tail
+      var newOldPaths = insertPath(path, oldPaths)
+      for (state2 <- successors.apply(state)) {
+        val cost = path.costSoFar + costFn.apply(state, state2)
+        val cost2 = costLeftFn.apply(state2)
+        val path2 = Path[T](state = state2, previous = Some(path), costSoFar = cost, totalCost = cost + cost2)
+        var old = findPath(state2, newPaths, stateEqual, pathState)
+        if (old.isDefined)
+          if (betterPath(path2, old.get))
+            newPaths = insertPath(path2, delete(old.get, newPaths))
+          else {
+            old = findPath(state2, newOldPaths, stateEqual, pathState)
+            if (betterPath(path2, old.get)) {
+              newPaths = insertPath(path2, newPaths)
+              newOldPaths = delete(old.get, newOldPaths)
+            } else {
+              newPaths = insertPath(path2, newPaths)
+            }
+          }
+      }
+      aStarSearch(newPaths, isGoal, successors, costFn, costLeftFn, stateEqual, newOldPaths)
+    }
+  }
+
+
+  def delete[T](item: T, lst: List[T]): List[T] = {
+    lst diff List(item)
+  }
+
   def main(args: Array[String]): Unit = {
     debug("search")
-    graphSearch[Int](List(1), is[Int](6), next2, prepend, stateEqual)
+    pathStates[Int](aStarSearch[Int](List[Path[Int]](Path[Int](state = 1)), is[Int](6), next2,
+      (x: Int, y: Int) => 1.0, stateEqual, diff(6), Nil))
   }
 }
