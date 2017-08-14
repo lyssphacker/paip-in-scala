@@ -222,7 +222,7 @@ object Search {
                      isGoal: T => Boolean,
                      successors: T => List[T],
                      costFn: (T, T) => Double,
-                     costLeftFn: T => Double,
+                     costLeftFn: T => T,
                      stateEqual: (T, T) => Boolean,
                      oldPaths: List[Path[T]]): Option[(Path[T], List[Path[T]])] = {
     dbg("search", s"Paths: $paths")
@@ -262,7 +262,7 @@ object Search {
 
   def main(args: Array[String]): Unit = {
     debug("search")
-    pathStates[Int](aStarSearch[Int](List[Path[Int]](Path[Int](state = 1)), is[Int](6), next2,
-      (x: Int, y: Int) => 1.0, stateEqual, diff(6), Nil))
+    pathStates[Int](aStarSearch[Int](List(Path[Int](state = 1)), is[Int](6), next2,
+      (x: Int, y: Int) => 1.0, diff(6), stateEqual[Int], Nil))
   }
 }
