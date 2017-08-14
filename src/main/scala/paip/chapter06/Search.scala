@@ -265,6 +265,23 @@ object Search {
     lst diff List(item)
   }
 
+  def searchAll[T, S](start: T,
+                      isGoal: T => Boolean,
+                      successors: T => List[T],
+                      costFn: T => S,
+                      beamWidth: Int): Option[List[T]] = {
+    var solutions: List[T] = Nil
+    beamSearch(start,
+      (x: T) => {
+        if (isGoal.apply(x)) solutions = x :: solutions
+        false
+      },
+      successors, costFn, beamWidth)
+
+    if (solutions.isEmpty) None
+    else Some(solutions)
+  }
+
   def main(args: Array[String]): Unit = {
     debug("search")
     val result = aStarSearch[Int](List(Path[Int](state = 1)), is[Int](6), next2,
