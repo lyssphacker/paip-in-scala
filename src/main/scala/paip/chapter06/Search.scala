@@ -234,27 +234,32 @@ object Search {
       var newPaths = paths.tail
       var newOldPaths = insertPath(path, oldPaths)
       for (state2 <- successors.apply(state)) {
-        val cost = path.costSoFar + costFn.apply(state, state2)
+        val cost: Double = path.costSoFar + costFn.apply(state, state2)
         val cost2 = costLeftFn.apply(state2)
-        val path2 = Path[T](state = state2, previous = Some(path), costSoFar = cost, totalCost = cost + cost2)
-        var old = findPath(state2, newPaths, stateEqual, pathState)
-        if (old.isDefined)
-          if (betterPath(path2, old.get))
-            newPaths = insertPath(path2, delete(old.get, newPaths))
-          else {
-            old = findPath(state2, newOldPaths, stateEqual, pathState)
-            if (betterPath(path2, old.get)) {
-              newPaths = insertPath(path2, newPaths)
-              newOldPaths = delete(old.get, newOldPaths)
-            } else {
-              newPaths = insertPath(path2, newPaths)
-            }
+        val path2 = Path(state = state2, previous = Some(path), costSoFar = cost, totalCost = add(cost2, cost))
+        var old = findPath(state2, newPaths, stateEqual, pathState[T])
+        if (old.isDefined && betterPath(path2, old.get))
+          newPaths = insertPath(path2, delete(old.get, newPaths))
+        else {
+          old = findPath(state2, newOldPaths, stateEqual, pathState[T])
+          if (old.isDefined && betterPath(path2, old.get)) {
+            newPaths = insertPath(path2, newPaths)
+            newOldPaths = delete(old.get, newOldPaths)
+          } else {
+            newPaths = insertPath(path2, newPaths)
           }
+        }
       }
       aStarSearch(newPaths, isGoal, successors, costFn, costLeftFn, stateEqual, newOldPaths)
     }
   }
 
+  def add[T](a1: T, a2: Double): Double = {
+    a1 match {
+      case a: Int => a + a2
+      case a: Double => a + a2
+    }
+  }
 
   def delete[T](item: T, lst: List[T]): List[T] = {
     lst diff List(item)
@@ -262,7 +267,9 @@ object Search {
 
   def main(args: Array[String]): Unit = {
     debug("search")
-    pathStates[Int](aStarSearch[Int](List(Path[Int](state = 1)), is[Int](6), next2,
-      (x: Int, y: Int) => 1.0, diff(6), stateEqual[Int], Nil))
+    val result = aStarSearch[Int](List(Path[Int](state = 1)), is[Int](6), next2,
+      (x: Int, y: Int) => 1.0, diff(6), stateEqual[Int], Nil)
+    val states = pathStates[Int](result.get._1)
+    states
   }
 }
