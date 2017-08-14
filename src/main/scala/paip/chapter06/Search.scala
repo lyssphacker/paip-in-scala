@@ -4,6 +4,11 @@ import paip.DebugUtils.{dbg, debug}
 import paip.chapter06.Cities.{City, cityEquals}
 
 object Search {
+
+  def findAllIf[T](test: T => Boolean, lst: List[T]): List[T] = {
+    lst.filter(test)
+  }
+
   def binaryTree(x: Int): List[Int] = {
     List(2 * x, 1 + 2 * x)
   }
