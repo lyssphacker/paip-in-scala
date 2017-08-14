@@ -5,6 +5,7 @@ import paip.chapter06.Search._
 import scala.math._
 
 object Cities {
+
   case class City(name: String, long: Double, lat: Double)
 
   object City {
@@ -82,9 +83,8 @@ object Cities {
     EarthDiameter * asin(d / 2.0)
   }
 
-
   def neighbors(city: City)(implicit cities: List[City]): List[City] = {
-    cities.filter((c: City) => !c.equals(city) && airDistance(c, city) < 1000.0)
+    findAllIf[City]((c: City) => !c.equals(city) && airDistance(c, city) < 1000.0, cities)
   }
 
   def trip(start: City, dest: City): Option[City] = {
