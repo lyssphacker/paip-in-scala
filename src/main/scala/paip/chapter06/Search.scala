@@ -1,6 +1,6 @@
 package paip.chapter06
 
-import paip.DebugUtils.{dbg, debug}
+import paip.utils.DebugUtils.{dbg, debug}
 import paip.chapter06.Cities.{City, cityEquals}
 
 object Search {

@@ -1,7 +1,7 @@
 package paip.chapter04
 
 import paip.chapter04.Gps.Op
-import paip.DebugUtils._
+import paip.utils.DebugUtils._
 
 object FullGps {
 

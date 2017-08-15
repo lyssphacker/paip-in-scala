@@ -4,7 +4,7 @@ import paip.chapter04.BlocksWorld.makeBlockOps
 import paip.chapter04.FullGps.{convertOp, countIf, isAction}
 import paip.chapter04.Gps.Op
 import paip.chapter06.Search.{beamSearch, findAllIf}
-import paip.DebugUtils._
+import paip.utils.DebugUtils._
 
 object GPSAsSearch {
   implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b", "c")).map(convertOp)

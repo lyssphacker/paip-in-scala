@@ -1,4 +1,4 @@
-package paip
+package paip.utils
 
 object DebugUtils {
   var dbgIds: Set[String] = Set.empty
