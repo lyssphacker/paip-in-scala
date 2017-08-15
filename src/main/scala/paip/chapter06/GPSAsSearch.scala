@@ -4,6 +4,7 @@ import paip.chapter04.BlocksWorld.makeBlockOps
 import paip.chapter04.FullGps.{convertOp, countIf, isAction}
 import paip.chapter04.Gps.Op
 import paip.chapter06.Search.{beamSearch, findAllIf}
+import paip.DebugUtils._
 
 object GPSAsSearch {
   implicit val convertedBlocksWorldOps = makeBlockOps(List("a", "b", "c")).map(convertOp)
@@ -18,8 +19,8 @@ object GPSAsSearch {
 
   def gpsSuccessors(state: List[String]): List[List[String]] = {
     applicableOps(state).map((op: Op) => {
-      val first = state.filter((s: String) => op.delList.contains(s))
-      val second = op.delList.toList
+      val first = state.filter((s: String) => !op.delList.contains(s))
+      val second = op.addList.toList
       first ::: second
     })
   }
@@ -29,7 +30,7 @@ object GPSAsSearch {
       isAction,
       beamSearch[List[String], Int](
         "start" :: start,
-        (state: List[String]) => state.forall(goal.contains),
+        (state: List[String]) => goal.forall(state.contains),
         gpsSuccessors,
         (state: List[String]) => countIf(isAction, state) +
           countIf((con: String) => !state.contains(con), goal),
@@ -39,7 +40,9 @@ object GPSAsSearch {
   }
 
   def main(args: Array[String]): Unit = {
-    searchGps(List("c on a", "a on table", "b on table", "space on c",
-      "space on b", "space on table"), List("a on b", "space on table"))
+    debug("search")
+    val result = searchGps(List("c on a", "a on table", "b on table", "space on c",
+      "space on b", "space on table"), List("b on c", "a on b"))
+    result
   }
 }
