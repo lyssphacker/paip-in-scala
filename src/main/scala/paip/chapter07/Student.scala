@@ -53,9 +53,13 @@ object Student {
     Bs(bindings)
   }
 
+  def removeNoiseWords(words: String): String = {
+    words.split(" ").filter((w: String) => !List("a", "an", "the", "this", "number", "of", "$").contains(w)).mkString(" ")
+  }
+
   def main(args: Array[String]): Unit = {
-    val result = translateToExpression("if the number of customers Tom gets is twice the square of 20 % of the number " +
-      "of advertisements he runs , and the number of advertisements is 45 , then what is the number of customers Tom gets ?")
+    val result = translateToExpression(removeNoiseWords("if the number of customers Tom gets is twice the square of 20 % of the number " +
+      "of advertisements he runs , and the number of advertisements is 45 , then what is the number of customers Tom gets ?"))
     result
   }
 }
