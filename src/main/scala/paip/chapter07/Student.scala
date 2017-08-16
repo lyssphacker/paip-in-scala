@@ -1,6 +1,7 @@
 package paip.chapter07
 
 import paip.chapter05.Eliza._
+import paip.chapter06.RuleBasedTranslator._
 
 object Student {
   implicit val studentRules: List[Rule] = List(
@@ -38,4 +39,11 @@ object Student {
     Rule(Lhs("?x* % more than ?y*"), Rhs("?y * ((100 + ?x) / 100))")),
     Rule(Lhs("?x* % ?y*"), Rhs("(?x / 100) * ?y"))
   )
+
+  def translateToExpression(words: String): String = {
+    ruleBasedTranslator(
+      words,
+
+    )
+  }
 }
