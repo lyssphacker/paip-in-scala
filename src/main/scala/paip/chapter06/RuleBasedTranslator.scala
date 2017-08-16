@@ -1,6 +1,6 @@
 package paip.chapter06
 
-import paip.chapter05.Eliza.{Lhs, Rhs, Rule, switchViewpoints}
+import paip.chapter05.Eliza.{Lhs, Rhs, Rule, switchViewpoints, useElizaRules}
 import paip.chapter05.PatMatchFacility._
 
 object RuleBasedTranslator {
@@ -26,19 +26,19 @@ object RuleBasedTranslator {
   def ruleBasedTranslator(input: String,
                           matcher: (P, I, Bs) => Bs = patMatch _,
                           ruleLhs: (Rule) => P = ruleIf _,
-                          action: (Bs, String) => String)
+                          action: (Bs, Rule) => String)
                          (implicit rules: List[Rule]) = {
     var result: Option[String] = None
     rules.find((rule: Rule) => {
       val bs = matcher.apply(ruleLhs.apply(rule), I(input), Bs.noBindings)
       if (!bs.equals(Bs.fail))
-        result = Some(action.apply(switchViewpoints(bs), rule.randomRhs))
+        result = Some(action.apply(bs, rule))
       result.isDefined
     })
     result
   }
 
   def useElizaRules(input: String): Option[String] = {
-    ruleBasedTranslator(input, action = substitute)
+    ruleBasedTranslator(input, action = (bs: Bs, rule: Rule) => substitute(switchViewpoints(bs), rule.randomRhs))
   }
 }
