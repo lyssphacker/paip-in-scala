@@ -1,6 +1,7 @@
 package paip.chapter07
 
 import paip.chapter05.Eliza._
+import paip.chapter05.PatMatchFacility.{Bs, substitute}
 import paip.chapter06.RuleBasedTranslator._
 
 object Student {
@@ -43,7 +44,18 @@ object Student {
   def translateToExpression(words: String): String = {
     ruleBasedTranslator(
       words,
+      action = (bs: Bs, rule: Rule) => substitute(translateBindings(bs), rule.randomRhs)
+    ).get
+  }
 
-    )
+  def translateBindings(bs: Bs): Bs = {
+    val bindings = bs.bindings.mapValues(v => translateToExpression(v))
+    Bs(bindings)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val result = translateToExpression("if the number of customers Tom gets is twice the square of 20 % of the number " +
+      "of advertisements he runs , and the number of advertisements is 45 , then what is the number of customers Tom gets ?")
+    result
   }
 }
