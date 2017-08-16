@@ -25,19 +25,20 @@ object RuleBasedTranslator {
 
   def ruleBasedTranslator(input: String,
                           matcher: (P, I, Bs) => Bs = patMatch _,
-                          ruleLhs: (Rule) => P = ruleIf _)
+                          ruleLhs: (Rule) => P = ruleIf _,
+                          action: (Bs, String) => String)
                          (implicit rules: List[Rule]) = {
     var result: Option[String] = None
     rules.find((rule: Rule) => {
       val bs = matcher.apply(ruleLhs.apply(rule), I(input), Bs.noBindings)
       if (!bs.equals(Bs.fail))
-        result = Some(substitute(switchViewpoints(bs), rule.randomRhs))
+        result = Some(action.apply(switchViewpoints(bs), rule.randomRhs))
       result.isDefined
     })
     result
   }
 
   def useElizaRules(input: String): Option[String] = {
-    ruleBasedTranslator(input)
+    ruleBasedTranslator(input, action = substitute)
   }
 }
