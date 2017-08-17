@@ -42,10 +42,12 @@ object Student {
   )
 
   def translateToExpression(words: String): String = {
-    ruleBasedTranslator(
+    val result = ruleBasedTranslator(
       words,
       action = (bs: Bs, rule: Rule) => substitute(translateBindings(bs), rule.randomRhs)
-    ).get
+    )
+    if (result.isDefined) result.get
+    else words
   }
 
   def translateBindings(bs: Bs): Bs = {
@@ -60,6 +62,7 @@ object Student {
   def main(args: Array[String]): Unit = {
     val result = translateToExpression(removeNoiseWords("if the number of customers Tom gets is twice the square of 20 % of the number " +
       "of advertisements he runs , and the number of advertisements is 45 , then what is the number of customers Tom gets ?"))
+//    val result = translateToExpression(removeNoiseWords("difference 1 and 2"))
     result
   }
 }
