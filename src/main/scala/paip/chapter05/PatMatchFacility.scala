@@ -118,7 +118,7 @@ object PatMatchFacility {
   def matchVariable(variable: String, input: String, bindings: Bs): Bs = {
     val binding: Option[B] = bindings.getBinding(variable)
     if (binding.isEmpty) bindings.extendBindings(variable.replace("*", ""), input)
-    else if (input.equals(binding.get.bindingVal)) bindings
+    else if (input.replace("(", "").replace(")", "").equals(binding.get.bindingVal)) bindings
     else Bs.fail
   }
 
@@ -132,7 +132,7 @@ object PatMatchFacility {
     if (pat.isEmpty)
       matchVariable(variable, input.toString, bindings)
     else {
-      val pos = input.value.indexOf(pat.firstValue, start)
+      val pos = removeParens(input.value).indexOf(pat.firstValue, start)
       if (pos == -1) Bs.fail
       else {
         val b2 = patMatch(
@@ -144,6 +144,10 @@ object PatMatchFacility {
         else b2
       }
     }
+  }
+
+  def removeParens(lst: List[String]): List[String] = {
+    lst.map((el: String) => el.replace("(", "").replace(")", ""))
   }
 
   def main(args: Array[String]): Unit = {
