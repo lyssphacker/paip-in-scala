@@ -3,7 +3,7 @@ package paip.chapter11
 import paip.chapter05.PatMatchFacility._
 
 object Unify {
-  implicit val checkOccurs = false
+  implicit val checkOccurs = true
 
   def unify(x: P, y: P, bindings: Bs = Bs.noBindings): Bs = {
     if (bindings.equals(Bs.fail)) Bs.fail
