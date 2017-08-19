@@ -44,6 +44,10 @@ object PatMatchFacility {
     def isEmpty: Boolean = {
       value.isEmpty
     }
+
+    def isAtom: Boolean = {
+      value.length == 1
+    }
   }
 
   case class I(value: List[String]) {
