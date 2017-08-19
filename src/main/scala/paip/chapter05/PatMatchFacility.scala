@@ -33,6 +33,10 @@ object PatMatchFacility {
       toString().equals(input.toString())
     }
 
+    def equals(p: P): Boolean = {
+      toString().equals(p.toString())
+    }
+
     def isCons: Boolean = {
       value.length > 1
     }
