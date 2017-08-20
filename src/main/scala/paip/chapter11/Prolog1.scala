@@ -18,7 +18,7 @@ object Prolog1 {
   }
 
   case class R(value: List[String]) {
-    def isAtom = value.nonEmpty
+    def isAtom = value.length == 1
 
     def first: String = value.head
 
@@ -138,7 +138,6 @@ object Prolog1 {
     addClauses(C(R("likes Sandy ?x"), R("likes ?x cats"), R("likes ?x Kim")))
     addClauses(C(R("likes ?x ?x")))
 
-    val result = proveGoals(R("likes Sandy ?who"))
-    result
+    proveGoals(R("likes Sandy ?who"))
   }
 }
