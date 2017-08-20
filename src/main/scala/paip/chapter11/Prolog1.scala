@@ -11,7 +11,11 @@ object Prolog1 {
 
   var clausesMap: scala.collection.mutable.Map[String, List[C]] = scala.collection.mutable.Map.empty
 
-  case class C(head: R, body: Option[R])
+  case class C(head: R, body: List[R])
+
+  object C {
+    def apply(head: R, body: R*): C = C(head, body.toList)
+  }
 
   case class R(value: List[String]) {
     def isAtom = value.nonEmpty
@@ -22,7 +26,7 @@ object Prolog1 {
   }
 
   object R {
-    def apply(s: String) = R(s.split(" ").toList)
+    def apply(s: String): R = R(s.split(" ").toList)
   }
 
   def addClauses(clauses: C*): Unit = {
@@ -47,7 +51,10 @@ object Prolog1 {
   }
 
   def addToClauseMap(pred: String, clause: C): Unit = {
-    clausesMap(pred) = clause :: clausesMap(pred)
+    if (clausesMap.get(pred).isEmpty)
+      clausesMap.put(pred, List(clause))
+    else
+      clausesMap(pred) = clause :: clausesMap(pred)
   }
 
   def addClause(clause: C): Unit = {
@@ -78,19 +85,19 @@ object Prolog1 {
   def prove(goal: R, bindings: Bs): List[Bs] = {
     getClauses(predicate(goal)).get.flatMap((c: C) => {
       val newClause = renameVariables(c)
-      proveAll(List(newClause.body.get), unify(P(goal.value), P(newClause.head.value), bindings))
+      proveAll(newClause.body, unify(P(goal.value), P(newClause.head.value), bindings))
     })
   }
 
   def renameVariables(clause: C): C = {
     val headBindings = Bs(variablesIn(List(clause.head)).map((v: String) => v -> gensym(v)).toMap)
     val head = clause.head.value.map((s: String) => substitute(headBindings, s))
-    if (clause.body.isDefined) {
-      val bodyBindings = Bs(variablesIn(List(clause.body.get)).map((v: String) => v -> gensym(v)).toMap)
-      val body = clause.body.get.value.map((s: String) => substitute(bodyBindings, s))
-      C(R(head), Some(R(body)))
+    if (clause.body.nonEmpty) {
+      val bodyBindings = Bs(variablesIn(clause.body).map((v: String) => v -> gensym(v)).toMap)
+      val body = clause.body.map((r: R) => R(substitute(bodyBindings, r.value.mkString(" "))))
+      C(R(head), body)
     } else {
-      C(R(head), None)
+      C(R(head), Nil)
     }
   }
 
@@ -120,5 +127,18 @@ object Prolog1 {
   def showPrologVars(vars: List[String], bindings: Bs): Unit = {
     if (vars.isEmpty) print("Yes")
     else vars.foreach((v: String) => println(s"$v = ${substBindings(bindings, P(v)).get}"))
+  }
+
+  def main(args: Array[String]): Unit = {
+    addClauses(C(R("likes Kim Robin")))
+    addClauses(C(R("likes Sandy Lee")))
+    addClauses(C(R("likes Sandy Kim")))
+    addClauses(C(R("likes Robin cats")))
+    addClauses(C(R("likes Sandy ?x"), R("likes ?x cats")))
+    addClauses(C(R("likes Sandy ?x"), R("likes ?x cats"), R("likes ?x Kim")))
+    addClauses(C(R("likes ?x ?x")))
+
+    val result = proveGoals(R("likes Sandy ?who"))
+    result
   }
 }
