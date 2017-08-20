@@ -11,7 +11,9 @@ object Prolog1 {
 
   var clausesMap: scala.collection.mutable.Map[String, List[C]] = scala.collection.mutable.Map.empty
 
-  case class C(head: R, body: List[R])
+  case class C(head: R, body: List[R]) {
+    def getHeadAndBody: List[R] = head :: body
+  }
 
   object C {
     def apply(head: R, body: R*): C = C(head, body.toList)
@@ -90,15 +92,10 @@ object Prolog1 {
   }
 
   def renameVariables(clause: C): C = {
-    val headBindings = Bs(variablesIn(List(clause.head)).map((v: String) => v -> gensym(v)).toMap)
-    val head = clause.head.value.map((s: String) => substitute(headBindings, s))
-    if (clause.body.nonEmpty) {
-      val bodyBindings = Bs(variablesIn(clause.body).map((v: String) => v -> gensym(v)).toMap)
-      val body = clause.body.map((r: R) => R(substitute(bodyBindings, r.value.mkString(" "))))
-      C(R(head), body)
-    } else {
-      C(R(head), Nil)
-    }
+    val bindings = Bs(variablesIn(clause.getHeadAndBody).map((v: String) => v -> gensym(v)).toMap)
+    val head = clause.head.value.map((s: String) => substitute(bindings, s))
+    val body = clause.body.map((r: R) => R(substitute(bindings, r.value.mkString(" "))))
+    C(R(head), body)
   }
 
   def variablesIn(goals: List[R]): List[String] = {
@@ -121,12 +118,15 @@ object Prolog1 {
 
   def showPrologSolutions(vars: List[String], bindings: List[Bs]): Unit = {
     if (bindings.isEmpty) println("No.")
-    else bindings.foreach((b: Bs) => showPrologVars(vars, b))
+    else bindings.foreach((b: Bs) => if (!b.equals(Bs.fail)) showPrologVars(vars, b))
   }
 
   def showPrologVars(vars: List[String], bindings: Bs): Unit = {
     if (vars.isEmpty) print("Yes")
-    else vars.foreach((v: String) => println(s"$v = ${substBindings(bindings, P(v)).get}"))
+    else vars.foreach((v: String) => {
+      val subst = substBindings(bindings, P(v))
+      if (subst.isDefined) println(s"$v = ${subst.get}")
+    })
   }
 
   def main(args: Array[String]): Unit = {
