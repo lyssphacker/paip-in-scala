@@ -79,7 +79,7 @@ object Prolog1 {
   }
 
   def proveAll(goals: List[R], bindings: Bs): List[Bs] = {
-    if (bindings.equals(Bs.fail)) List(Bs.fail)
+    if (bindings.equals(Bs.fail)) List.empty
     else if (goals.isEmpty) List(bindings)
     else prove(goals.head, bindings).flatMap((bs: Bs) => proveAll(goals.tail, bs))
   }
@@ -118,7 +118,7 @@ object Prolog1 {
 
   def showPrologSolutions(vars: List[String], bindings: List[Bs]): Unit = {
     if (bindings.isEmpty) println("No.")
-    else bindings.foreach((b: Bs) => if (!b.equals(Bs.fail)) showPrologVars(vars, b))
+    else bindings.foreach((b: Bs) => showPrologVars(vars, b))
   }
 
   def showPrologVars(vars: List[String], bindings: Bs): Unit = {
@@ -138,6 +138,9 @@ object Prolog1 {
     addClauses(C(R("likes Sandy ?x"), R("likes ?x cats"), R("likes ?x Kim")))
     addClauses(C(R("likes ?x ?x")))
 
-    proveGoals(R("likes Sandy ?who"))
+//    proveGoals(R("likes Sandy ?who"))
+    proveGoals(R("likes ?who Sandy"))
+//    proveGoals(R("likes Robin Lee"))
+//    proveGoals(R("likes ?x ?y"), R("likes ?y ?x"))
   }
 }
