@@ -30,4 +30,8 @@ object Prolog {
     else if (goals.isEmpty) bindings
     else prove(goals.head, bindings, goals.tail)
   }
+
+  def proveGoals(goals: R*): Unit = {
+
+  }
 }
