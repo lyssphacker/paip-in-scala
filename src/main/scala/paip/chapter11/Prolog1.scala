@@ -75,7 +75,7 @@ object Prolog1 {
   }
 
   def proveGoals(goals: R*): Unit = {
-    showPrologSolutions(variablesIn(goals.toList), proveAll(goals.toList, Bs.noBindings))
+    showPrologSolutions(variablesIn(goals.toList, isVariable), proveAll(goals.toList, Bs.noBindings))
   }
 
   def proveAll(goals: List[R], bindings: Bs): List[Bs] = {
@@ -92,14 +92,14 @@ object Prolog1 {
   }
 
   def renameVariables(clause: C): C = {
-    val bindings = Bs(variablesIn(clause.getHeadAndBody).map((v: String) => v -> gensym(v)).toMap)
+    val bindings = Bs(variablesIn(clause.getHeadAndBody, isVariable).map((v: String) => v -> gensym(v)).toMap)
     val head = clause.head.value.map((s: String) => substitute(bindings, s))
     val body = clause.body.map((r: R) => R(substitute(bindings, r.value.mkString(" "))))
     C(R(head), body)
   }
 
-  def variablesIn(goals: List[R]): List[String] = {
-    goals.flatMap((g: R) => uniqueFindAnywhereif(isVariable, g))
+  def variablesIn(goals: List[R], predicate: String => Boolean): List[String] = {
+    goals.flatMap((g: R) => uniqueFindAnywhereif(predicate, g))
   }
 
   def uniqueFindAnywhereif(predicate: String => Boolean, goal: R, foundSoFar: List[String] = List.empty): List[String] = {
