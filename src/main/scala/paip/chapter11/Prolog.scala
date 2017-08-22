@@ -1,7 +1,7 @@
 package paip.chapter11
 
 import paip.chapter05.PatMatchFacility.{Bs, P}
-import paip.chapter11.Prolog1.{addClauses, proveGoals, _}
+import paip.chapter11.Prolog1._
 import paip.chapter11.Unify._
 
 object Prolog {
@@ -13,7 +13,12 @@ object Prolog {
   }
 
   def replaceAnonVar(goal: R): R = {
-    R(goal.value.mkString(" ").replace("?", gensym("?")))
+    val trans = goal.value.map((s: String) => {
+      if (s.equals("?")) s.replace("?", gensym("?"))
+      else s
+      })
+
+    R(trans.mkString(" "))
   }
 
   def replaceAnonVars(clause: C): C = {
@@ -63,7 +68,10 @@ object Prolog {
   def showPrologVars(vars: List[String], bindings: Bs, otherGoals: List[R]): Bs = {
     if (vars.isEmpty) println("Yes.")
     else {
-      vars.foreach((v: String) => println(s"$v = ${substBindings(bindings, P(v))}"))
+      vars.foreach((v: String) => {
+        val subst = substBindings(bindings, P(v))
+        if (subst.isDefined) println(s"$v = ${subst.get}")
+      })
     }
 
     if (continue()) Bs.fail
@@ -94,8 +102,8 @@ object Prolog {
     addClauses(C(R("likes Sandy ?x"), R("likes ?x cats"), R("likes ?x Kim")))
     addClauses(C(R("likes ?x ?x")))
 
-        proveGoals(R("likes Sandy ?who"))
-//    proveGoals(R("likes ?who Sandy"))
+    proveGoals(R("likes Sandy ?who"))
+    //    proveGoals(R("likes ?who Sandy"))
     //    proveGoals(R("likes Robin Lee"))
     //    proveGoals(R("likes ?x ?y"), R("likes ?y ?x"))
   }
