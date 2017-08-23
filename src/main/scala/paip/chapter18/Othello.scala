@@ -6,7 +6,7 @@ object Othello {
     type Piece = Value
     val empty = Value(".")
     val black = Value("@")
-    val white = Value("?")
+    val white = Value("0")
     val outer = Value("?")
   }
 
