@@ -12,6 +12,11 @@ object Othello {
 
   val allDirections = List(-11, -10, -9, -1, 1, 9, 10, 11)
 
+  val allSquares = (11 to 88).filter((i: Int) => {
+    val mod = i % 10
+    mod >= 1 && mod <= 8
+  }).toList
+
   import paip.chapter18.Othello.Piece._
 
   def opponent(player: Piece): Piece = {
@@ -19,21 +24,20 @@ object Othello {
     else black
   }
 
-  case class Board() {
-    val arr: Array[Piece] = new Array(100)
-
+  case class Board(pieces: Array[Piece]) {
     def aref(square: Int): Piece = {
-      arr(square)
+      pieces(square)
     }
 
     def aset(square: Int, value: Piece): Unit = {
-      arr(square) = value
+      pieces(square) = value
     }
-
   }
 
   def main(args: Array[String]): Unit = {
-    val board = Board()
-    board.arr
+    val board: Board = Board(new Array[Piece](100))
+    board.aset(2, white)
+    val board1 = board.copy()
+    board1
   }
 }
