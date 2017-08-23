@@ -34,6 +34,16 @@ object Othello {
     }
   }
 
+  def initialBoard(): Board = {
+    val board = Board(Array.fill[Piece](100)(outer))
+    for (square <- allSquares) board.aset(square, empty)
+    board.aset(44, white)
+    board.aset(45, black)
+    board.aset(54, black)
+    board.aset(55, white)
+    board
+  }
+
   def main(args: Array[String]): Unit = {
     val board: Board = Board(new Array[Piece](100))
     board.aset(2, white)
