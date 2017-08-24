@@ -39,13 +39,9 @@ object Othello {
       pieces.toList.count(_.equals(p))
     }
 
-    def countDifference(p: Piece): Int = {
-      count(p) - count(opponent(p))
-    }
-
     def printBoard(): Unit = {
       println(s"${" " * 3} 1 2 3 4 5 6 7 8 [$black=${count(black)} " +
-        s"$white=${count(white)} (${countDifference(black)})]")
+        s"$white=${count(white)} (${countDifference(black, this)})]")
 
       for (row <- 1 to 8) {
         print(s"${10 * row}  ")
@@ -121,6 +117,10 @@ object Othello {
     }
   }
 
+  def countDifference(p: Piece, board: Board): Int = {
+    board.count(p) - board.count(opponent(p))
+  }
+
   def initialBoard(): Board = {
     val board = Board(Array.fill[Piece](100)(outer))
     for (square <- allSquares) board.aset(square, empty)
@@ -143,7 +143,7 @@ object Othello {
       println("The game is over. Final result: ")
       board.printBoard()
     }
-    board.countDifference(black)
+    countDifference(black, board)
   }
 
   def human(player: Piece, board: Board): Int = {
@@ -158,6 +158,19 @@ object Othello {
   def randomStrategy(player: Piece, board: Board): Int = {
     val moves = legalMoves(player, board)
     moves(Random.nextInt(moves.size))
+  }
+
+  def maxmizier(evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
+    (player: Piece, board: Board) => {
+      val moves = legalMoves(player, board)
+      val scores = moves.map((m: Int) => evalFn.apply(player, board.copy().makeMove(m, player)))
+      val best = scores.max
+      moves(scores.indexOf(best))
+    }
+  }
+
+  def maximizeDifference(player: Piece, board: Board): Int = {
+    maxmizier(countDifference).apply(player, board)
   }
 
   def main(args: Array[String]): Unit = {
