@@ -54,6 +54,12 @@ object Othello {
       }
       println()
     }
+
+    def findBracketingPiece(square: Int, player: Piece, dir: Int): Option[Int] = {
+      if (aref(square).equals(player)) Some(square)
+      else if (aref(square).equals(opponent(player))) Some(opponent(player).id)
+      else None
+    }
   }
 
   def initialBoard(): Board = {
