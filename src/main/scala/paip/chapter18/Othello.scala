@@ -32,6 +32,28 @@ object Othello {
     def aset(square: Int, value: Piece): Unit = {
       pieces(square) = value
     }
+
+    def count(p: Piece): Int = {
+      pieces.toList.count(_.equals(p))
+    }
+
+    def countDifference(p: Piece): Int = {
+      count(p) - count(opponent(p))
+    }
+
+    def printBoard(): Unit = {
+      println(s"${" " * 3} 1 2 3 4 5 6 7 8 [$black=${count(black)} " +
+        s"$white=${count(white)} (${countDifference(black)})]")
+
+      for (row <- 1 to 8) {
+        print(s"${10 * row}  ")
+        for (col <- 1 to 8) {
+          print(s"${aref(col + row * 10)} ")
+        }
+        println()
+      }
+      println()
+    }
   }
 
   def initialBoard(): Board = {
@@ -45,9 +67,7 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-    val board: Board = Board(new Array[Piece](100))
-    board.aset(2, white)
-    val board1 = board.copy()
-    board1
+    val board = initialBoard()
+    board.printBoard()
   }
 }
