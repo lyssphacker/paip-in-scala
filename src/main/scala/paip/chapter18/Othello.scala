@@ -129,6 +129,21 @@ object Othello {
     board
   }
 
+  def othello(blStrategy: (Piece, Board) => Int, whStrategy: (Piece, Board) => Int, print: Boolean = true): Int = {
+    val board = initialBoard()
+    var player: Option[Piece] = Some(black)
+    do {
+      val strategy = if (player.get.equals(black)) blStrategy else whStrategy
+      board.getMove(strategy, player.get, print)
+      player = board.nextToPlay(player.get, print)
+    } while (player.isDefined)
+    if (print) {
+      println("The game is over. Final result: ")
+      board.printBoard()
+    }
+    board.countDifference(black)
+  }
+
   def main(args: Array[String]): Unit = {
     val board = initialBoard()
     board.printBoard()
