@@ -161,7 +161,6 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-    val board = initialBoard()
-    board.printBoard()
+    othello(human, human)
   }
 }
