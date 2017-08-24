@@ -160,7 +160,7 @@ object Othello {
     moves(Random.nextInt(moves.size))
   }
 
-  def maxmizier(evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
+  def maximizier(evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
     (player: Piece, board: Board) => {
       val moves = legalMoves(player, board)
       val scores = moves.map((m: Int) => evalFn.apply(player, board.copy().makeMove(m, player)))
@@ -170,7 +170,7 @@ object Othello {
   }
 
   def maximizeDifference(player: Piece, board: Board): Int = {
-    maxmizier(countDifference).apply(player, board)
+    maximizier(countDifference).apply(player, board)
   }
 
   val weights = Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -184,7 +184,14 @@ object Othello {
     0, 120, -20, 20, 5, 5, 20, -20, 120, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
+  def weightedSquares(player: Piece, board: Board): Int = {
+    val opp = opponent(player)
+    val sum1 = allSquares.filter((s: Int) => player.equals(board.aref(s))).map(weights(_)).sum
+    val sum2 = allSquares.filter((s: Int) => opp.equals(board.aref(s))).map(-weights(_)).sum
+    sum1 + sum2
+  }
+
   def main(args: Array[String]): Unit = {
-    othello(human, human)
+    othello(maximizier(weightedSquares), maximizier(countDifference), true)
   }
 }
