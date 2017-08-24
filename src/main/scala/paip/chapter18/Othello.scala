@@ -60,6 +60,21 @@ object Othello {
       else if (aref(square).equals(opponent(player))) Some(opponent(player).id)
       else None
     }
+
+    def wouldFlip(move: Int, player: Piece, dir: Int): Option[Int] = {
+      val c = move + dir
+      if (aref(c).equals(opponent(player))) findBracketingPiece(c + dir, player, dir)
+      else None
+    }
+
+    def makeFlips(move: Int, player: Piece, dir: Int): Unit = {
+      val bracketer = wouldFlip(move, player, dir)
+      if (bracketer.isDefined) {
+        for (c <- (move + dir) to bracketer.get by dir) {
+          aset(c, player)
+        }
+      }
+    }
   }
 
   def initialBoard(): Board = {
