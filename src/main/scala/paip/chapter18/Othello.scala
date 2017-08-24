@@ -94,6 +94,29 @@ object Othello {
       }
       else None
     }
+
+    def getMove(strategy: (Piece, Board) => Int, player: Piece, print: Boolean): Board = {
+      if (print) printBoard()
+      val move = strategy.apply(player, this.copy())
+      if (isValidMove(move) && isLegalMove(move, player)) {
+        if (print) println(s"$player moves to $move")
+        makeMove(move, player)
+      } else {
+        println(s"Illegal move: $move")
+        getMove(strategy, player, print)
+      }
+    }
+
+    def isValidMove(move: Int): Boolean = {
+      val mod = move % 10
+      move >= 11 && move <= 88 && mod >= 1 && mod <= 8
+    }
+
+    def makeMove(move: Int, player: Piece): Board = {
+      aset(move, player)
+      for (dir <- allDirections) makeFlips(move, player, dir)
+      this
+    }
   }
 
   def initialBoard(): Board = {
