@@ -1,5 +1,7 @@
 package paip.chapter18
 
+import scala.util.Random
+
 object Othello {
 
   object Piece extends Enumeration {
@@ -142,6 +144,20 @@ object Othello {
       board.printBoard()
     }
     board.countDifference(black)
+  }
+
+  def human(player: Piece, board: Board): Int = {
+    println(s"$player to move: ")
+    scala.io.StdIn.readInt()
+  }
+
+  def legalMoves(player: Piece, board: Board): List[Int] = {
+    allSquares.filter((m: Int) => board.isLegalMove(m, player))
+  }
+
+  def randomStrategy(player: Piece, board: Board): Int = {
+    val moves = legalMoves(player, board)
+    moves(Random.nextInt(moves.size))
   }
 
   def main(args: Array[String]): Unit = {
