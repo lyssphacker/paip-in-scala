@@ -75,6 +75,25 @@ object Othello {
         }
       }
     }
+
+    def anyLegalMove(player: Piece): Boolean = {
+      allSquares.exists(isLegalMove(_, player))
+    }
+
+    def isLegalMove(move: Int, player: Piece): Boolean = {
+      aref(move).equals(empty) &&
+        allDirections.exists(wouldFlip(move, player, _).isDefined)
+    }
+
+    def nextToPlay(previousPlayer: Piece, print: Boolean): Option[Piece] = {
+      val opp = opponent(previousPlayer)
+      if (anyLegalMove(opp)) Some(opp)
+      else if (anyLegalMove(previousPlayer)) {
+        if (print) println(s"$opp has no moves and must pass.")
+        Some(previousPlayer)
+      }
+      else None
+    }
   }
 
   def initialBoard(): Board = {
