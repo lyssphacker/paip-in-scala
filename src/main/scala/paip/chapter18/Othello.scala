@@ -1,8 +1,5 @@
 package paip.chapter18
 
-import paip.chapter18.Othello.Board
-import paip.chapter18.Othello.Piece.Piece
-
 import scala.util.Random
 
 object Othello {
@@ -238,8 +235,37 @@ object Othello {
     }
   }
 
+  def alphaBeta(player: Piece, board: Board, achievable: Int, cutoff: Int,
+                ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Option[Int], Option[Int]) = {
+    if (ply == 0) evalFn.apply(player, board)
+    else {
+      val moves = legalMoves(player, board)
+      if (moves.isEmpty) {
+        if (board.anyLegalMove(opponent(player))) {
+          val result = alphaBeta(opponent(player), board, -cutoff, -achievable, ply - 1, evalFn)
+          val first = result._1.get
+          (Some(-first), None)
+        } else (Some(board.finalValue(player)), None)
+      } else {
+        var bestMove = moves.head
+        var achievable_ = achievable
+        moves.iterator.takeWhile((i: Int) => achievable_ >= cutoff).
+          foreach((move: Int) => {
+            val board2 = board.copy().makeMove(move, player)
+            val result = alphaBeta(opponent(player), board2, -cutoff, -achievable_, ply - 1, evalFn)
+            val value = -result._1.get
+            if (value > achievable_) {
+              achievable_ = value
+              bestMove = move
+            }
+          })
+        (Some(achievable_), Some(bestMove))
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     //    othello(maximizier(weightedSquares), maximizier(countDifference), true)
-//    othello(human, human)
+    //    othello(human, human)
   }
 }
