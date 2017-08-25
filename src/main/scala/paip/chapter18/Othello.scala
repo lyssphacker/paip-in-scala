@@ -1,5 +1,8 @@
 package paip.chapter18
 
+import paip.chapter18.Othello.Board
+import paip.chapter18.Othello.Piece.Piece
+
 import scala.util.Random
 
 object Othello {
@@ -228,8 +231,15 @@ object Othello {
     }
   }
 
+  def minimaxSearcher(ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Piece, Board) => Int = {
+    (player: Piece, board: Board) => {
+      val result = minimax(player, board, ply, evalFn)
+      result._1.get
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     //    othello(maximizier(weightedSquares), maximizier(countDifference), true)
-    othello(human, human)
+//    othello(human, human)
   }
 }
