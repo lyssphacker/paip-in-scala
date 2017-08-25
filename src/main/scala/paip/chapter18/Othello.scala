@@ -202,8 +202,31 @@ object Othello {
     sum1 + sum2
   }
 
+  def minimax(player: Piece, board: Board, ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Option[Int], Option[Int]) = {
+    if (ply == 0) evalFn.apply(player, board)
+    else {
+      var bestMove: Option[Int] = None
+      var bestVal: Option[Int] = None
+      val moves = legalMoves(player, board)
+      if (moves.isEmpty) {
+        if (board.anyLegalMove(opponent(player)))
+          minimax(opponent(player), board, ply - 1, evalFn)
+        else board.finalValue(player)
+        for (move <- moves) {
+          val board2 = board.copy().makeMove(move, player)
+          val value = -minimax(opponent(player), board2, ply - 1, evalFn)._1.get
+          if (bestVal.isEmpty || value > bestVal.get) {
+            bestVal = Some(value)
+            bestMove = Some(move)
+          }
+        }
+      }
+      (bestVal, bestMove)
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-//    othello(maximizier(weightedSquares), maximizier(countDifference), true)
+    //    othello(maximizier(weightedSquares), maximizier(countDifference), true)
     othello(human, human)
   }
 }
