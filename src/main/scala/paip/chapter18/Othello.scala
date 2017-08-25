@@ -205,13 +205,16 @@ object Othello {
   def minimax(player: Piece, board: Board, ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Option[Int], Option[Int]) = {
     if (ply == 0) evalFn.apply(player, board)
     else {
-      var bestMove: Option[Int] = None
-      var bestVal: Option[Int] = None
       val moves = legalMoves(player, board)
       if (moves.isEmpty) {
-        if (board.anyLegalMove(opponent(player)))
-          minimax(opponent(player), board, ply - 1, evalFn)
-        else board.finalValue(player)
+        if (board.anyLegalMove(opponent(player))) {
+          val result = minimax(opponent(player), board, ply - 1, evalFn)
+          val first = result._1.get
+          (Some(-first), None)
+        } else (Some(board.finalValue(player)), None)
+      } else {
+        var bestMove: Option[Int] = None
+        var bestVal: Option[Int] = None
         for (move <- moves) {
           val board2 = board.copy().makeMove(move, player)
           val value = -minimax(opponent(player), board2, ply - 1, evalFn)._1.get
@@ -220,8 +223,8 @@ object Othello {
             bestMove = Some(move)
           }
         }
+        (bestVal, bestMove)
       }
-      (bestVal, bestMove)
     }
   }
 
