@@ -115,6 +115,17 @@ object Othello {
       for (dir <- allDirections) makeFlips(move, player, dir)
       this
     }
+
+    val WinningValue = Int.MaxValue
+    val LosingValue = Int.MinValue
+
+    def finalValue(player: Piece): Int = {
+      countDifference(player, this) match {
+        case -1 => LosingValue
+        case 0 => 0
+        case 1 => WinningValue
+      }
+    }
   }
 
   def countDifference(p: Piece, board: Board): Int = {
@@ -192,6 +203,7 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-    othello(maximizier(weightedSquares), maximizier(countDifference), true)
+//    othello(maximizier(weightedSquares), maximizier(countDifference), true)
+    othello(human, human)
   }
 }
