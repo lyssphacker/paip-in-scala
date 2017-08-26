@@ -116,16 +116,18 @@ object Othello {
       this
     }
 
-    val WinningValue = Int.MaxValue
-    val LosingValue = Int.MinValue
-
     def finalValue(player: Piece): Int = {
       countDifference(player, this) match {
-        case -1 => LosingValue
+        case -1 => Board.LosingValue
         case 0 => 0
-        case 1 => WinningValue
+        case 1 => Board.WinningValue
       }
     }
+  }
+
+  object Board {
+    val WinningValue = Int.MaxValue
+    val LosingValue = Int.MinValue
   }
 
   def countDifference(p: Piece, board: Board): Int = {
@@ -261,6 +263,13 @@ object Othello {
           })
         (Some(achievable_), Some(bestMove))
       }
+    }
+  }
+
+  def alphaBetaSearcher(depth: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Piece, Board) => Int = {
+    (player: Piece, board: Board) => {
+      val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
+      result._2.get
     }
   }
 
