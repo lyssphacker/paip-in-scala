@@ -105,11 +105,6 @@ object Othello {
       }
     }
 
-    def isValidMove(move: Int): Boolean = {
-      val mod = move % 10
-      move >= 11 && move <= 88 && mod >= 1 && mod <= 8
-    }
-
     def makeMove(move: Int, player: Piece): Board = {
       aset(move, player)
       for (dir <- allDirections) makeFlips(move, player, dir)
@@ -128,6 +123,11 @@ object Othello {
   object Board {
     val WinningValue = Int.MaxValue
     val LosingValue = Int.MinValue
+  }
+
+  def isValidMove(move: Int): Boolean = {
+    val mod = move % 10
+    move >= 11 && move <= 88 && mod >= 1 && mod <= 8
   }
 
   def countDifference(p: Piece, board: Board): Int = {
@@ -276,6 +276,36 @@ object Othello {
   def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Option[Int], Option[Int]) = {
     (player: Piece, board: Board) => {
       (Some(fn.apply(player, board)), None)
+    }
+  }
+
+  def modifiedWeightedSquares(player: Piece, board: Board): Int = {
+    var w = weightedSquares(player, board)
+    val neighborTable = NeighborTable()
+    List(11, 18, 81, 88).foreach((corner: Int) => {
+      if (!board.aref(corner).equals(empty))
+        for (c <- neighborTable.neighbors(corner))
+          if (!board.aref(c).equals(empty))
+            w += (5 - weights(c)) * (if (board.aref(c).equals(player)) 1 else -1)
+    })
+    w
+  }
+
+  case class NeighborTable(squares: Array[List[Int]]) {
+    def neighbors(square: Int): List[Int] = {
+      squares(square)
+    }
+  }
+
+  object NeighborTable {
+    def apply(): NeighborTable = {
+      val squares = new Array[List[Int]](100)
+      for (square <- allSquares)
+        for (dir <- allDirections)
+          if (isValidMove(square + dir))
+            squares(square) = squares(square) :+ (square + dir)
+
+      NeighborTable(squares)
     }
   }
 
