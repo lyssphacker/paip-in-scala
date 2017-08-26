@@ -55,7 +55,7 @@ object Othello {
 
     def findBracketingPiece(square: Int, player: Piece, dir: Int): Option[Int] = {
       if (aref(square).equals(player)) Some(square)
-      else if (aref(square).equals(opponent(player))) Some(opponent(player).id)
+      else if (aref(square).equals(opponent(player))) findBracketingPiece(square + dir, player, dir)
       else None
     }
 
@@ -273,8 +273,14 @@ object Othello {
     }
   }
 
+  def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Option[Int], Option[Int]) = {
+    (player: Piece, board: Board) => {
+      (Some(fn.apply(player, board)), None)
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-    //    othello(maximizier(weightedSquares), maximizier(countDifference), true)
-    //    othello(human, human)
+//        othello(human, human)
+    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
   }
 }
