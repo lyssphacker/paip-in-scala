@@ -160,8 +160,17 @@ object Othello {
   }
 
   def human(player: Piece, board: Board): Int = {
-    println(s"$player to move: ")
-    scala.io.StdIn.readInt()
+    val squareNames = SquareNames()
+    println(s"$player to move: ${legalMoves(player, board).map((m: Int) => squareNames.numericToAlpha(m).left.get).mkString(" ")}")
+    var result: Option[Int] = None
+    do {
+      squareNames.alphaToNumeric(scala.io.StdIn.readLine()).left.getOrElse(None) match {
+        case i: Int => result = Some(i)
+        case None => println("Non existent command.")
+      }
+    } while (result.isEmpty)
+
+    result.get
   }
 
   def legalMoves(player: Piece, board: Board): List[Int] = {
@@ -323,7 +332,7 @@ object Othello {
   }
 
   object SquareNames {
-    def apply() = {
+    def apply(): SquareNames = {
       SquareNames(crossProduct((x: String, y: String) => x + y,
         List("?", "a", "b", "c", "d", "e", "f", "g", "h", "?"),
         List("?", "1", "2", "3", "4", "5", "6", "7", "8", "?")))
