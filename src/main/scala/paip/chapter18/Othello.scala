@@ -309,6 +309,31 @@ object Othello {
     }
   }
 
+  case class SquareNames(names: List[String]) {
+    def alphaToNumeric(str: String): Either[Int, String] = {
+      val position = names.indexOf(str)
+      if (position == -1) Right(str)
+      else Left(position)
+    }
+
+    def numericToAlpha(num: Int): Either[Int, String] = {
+      if (isValidMove(num)) Right(names(num))
+      else Left(num)
+    }
+  }
+
+  object SquareNames {
+    def apply() = {
+      SquareNames(crossProduct((x: String, y: String) => x + y,
+        List("?", "a", "b", "c", "d", "e", "f", "g", "h", "?"),
+        List("?", "1", "2", "3", "4", "5", "6", "7", "8", "?")))
+    }
+
+    def crossProduct(fn: (String, String) => String, xlist: List[String], ylist: List[String]): List[String] = {
+      ylist.flatMap((y: String) => xlist.map((x: String) => fn.apply(x, y)))
+    }
+  }
+
   def main(args: Array[String]): Unit = {
 //        othello(human, human)
     othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
