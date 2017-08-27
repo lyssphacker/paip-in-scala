@@ -8,15 +8,15 @@ object Othello {
 
   object Piece extends Enumeration {
     type Piece = Value
-    val empty = Value(".")
-    val black = Value("@")
-    val white = Value("0")
-    val outer = Value("?")
+    val empty: Piece = Value(".")
+    val black: Piece = Value("@")
+    val white: Piece = Value("0")
+    val outer: Piece = Value("?")
   }
 
   val allDirections = List(-11, -10, -9, -1, 1, 9, 10, 11)
 
-  val allSquares = (11 to 88).filter((i: Int) => {
+  val allSquares: List[Int] = (11 to 88).filter((i: Int) => {
     val mod = i % 10
     mod >= 1 && mod <= 8
   }).toList
@@ -46,7 +46,7 @@ object Othello {
         s"$white=${count(white)} (${countDifference(black, this)})]")
 
       for (row <- 1 to 8) {
-        print(s"  ${row}  ")
+        print(s"  $row  ")
         for (col <- 1 to 8) {
           print(s"${aref(col + row * 10)} ")
         }
@@ -116,8 +116,8 @@ object Othello {
   }
 
   object Board {
-    val WinningValue = Int.MaxValue
-    val LosingValue = Int.MinValue
+    val WinningValue: Int = Int.MaxValue
+    val LosingValue: Int = Int.MinValue
   }
 
   def isValidMove(move: Int): Boolean = {
@@ -146,7 +146,7 @@ object Othello {
 
     def elt(player: Int): Int = values(player)
 
-    def isEmpty(): Boolean = values.isEmpty
+    def isEmpty: Boolean = values.isEmpty
 
     def toMinsSecs(player: Int): String = {
       val mins = TimeUnit.MILLISECONDS.toMinutes(elt(player))
@@ -159,7 +159,7 @@ object Othello {
   object Clock {
     def apply(minutes: Int): Clock = Clock(Array.fill[Int](List(black.id, white.id).max)(minutes * 60000))
 
-    def empty(): Clock = Clock(Array[Int]())
+    def empty: Clock = Clock(Array[Int]())
   }
 
   case class OthelloException(result: Int) extends Exception
@@ -175,7 +175,7 @@ object Othello {
     try {
       var player: Option[Piece] = Some(black)
       do {
-        val strategy = if (player.equals(black)) blStrategy else whStrategy
+        val strategy = if (player.get.equals(black)) blStrategy else whStrategy
         getMove(strategy, player.get, board, print, clock)
         player = board.nextToPlay(player.get, print)
       } while (player.isDefined)
@@ -189,10 +189,10 @@ object Othello {
     countDifference(black, board)
   }
 
-  val squareNames = SquareNames()
+  val squareNames: SquareNames = SquareNames()
 
-  var GlobalClock = Clock(new Array[Int](3))
-  var GlobalBoard = initialBoard()
+  var GlobalClock: Clock = Clock(new Array[Int](3))
+  var GlobalBoard: Board = initialBoard()
 
   def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
     if (print) board.printBoard()
@@ -212,12 +212,11 @@ object Othello {
       board.makeMove(move.left.get, player)
     } else {
       move match {
-        case Left(i) => {
+        case Left(i) =>
           squareNames.numericToAlpha(i) match {
             case Left(j) => println(s"Illegal move: $j")
             case Right(s) => println(s"Illegal move: $s")
           }
-        }
         case Right(s) => println(s"Illegal move: $s")
       }
       getMove(strategy, player, board, print, clock)
