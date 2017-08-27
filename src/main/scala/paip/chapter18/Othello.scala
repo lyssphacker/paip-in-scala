@@ -157,7 +157,7 @@ object Othello {
   }
 
   object Clock {
-    def apply(minutes: Int): Clock = Clock(Array.fill[Int](List(black.id, white.id).max)(minutes * 60000))
+    def apply(minutes: Int): Clock = Clock(Array.fill[Int](List(black.id, white.id).max + 1)(minutes * 60000))
 
     def empty: Clock = Clock(Array[Int]())
   }
@@ -411,8 +411,38 @@ object Othello {
     }
   }
 
+  def countIf(fn: Int => Boolean, lst: List[Int]): Int = {
+    lst.count(fn)
+  }
+
+  def isPositive(i: Int): Boolean = {
+    i > 0
+  }
+
+  def isZero(i: Int): Boolean = {
+    i == 0
+  }
+
+  def othelloSeries(strategy1: (Piece, Board) => Either[Int, String],
+                    strategy2: (Piece, Board) => Either[Int, String],
+                    npairs: Int): (Int, Int, List[Int]) = {
+    var scores: List[Int] = List.empty
+    1 to npairs foreach((i: Int) => {
+      scores = othello(strategy1, strategy2, print = false) +: scores
+      scores = -othello(strategy2, strategy1, print = false) +: scores
+    })
+
+    val res1 = countIf(isPositive, scores) + countIf(isZero, scores) / 2
+    val res2 = scores.sum
+
+    (res1, res2, scores)
+  }
+
   def main(args: Array[String]): Unit = {
     //        othello(human, human)
-    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
+//    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
+    val result = othelloSeries(alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
+      alphaBetaSearcher(2, adaptFn(weightedSquares)), 5)
+    result
   }
 }
