@@ -415,13 +415,9 @@ object Othello {
     lst.count(fn)
   }
 
-  def isPositive(i: Int): Boolean = {
-    i > 0
-  }
+  def isPositive(i: Int): Boolean = i > 0
 
-  def isZero(i: Int): Boolean = {
-    i == 0
-  }
+  def isZero(i: Int): Boolean = i == 0
 
   def othelloSeries(strategy1: (Piece, Board) => Either[Int, String],
                     strategy2: (Piece, Board) => Either[Int, String],
