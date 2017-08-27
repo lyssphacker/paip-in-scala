@@ -1,5 +1,7 @@
 package paip.chapter18
 
+import java.util.concurrent.TimeUnit
+
 import scala.util.Random
 
 object Othello {
@@ -39,17 +41,22 @@ object Othello {
       pieces.toList.count(_.equals(p))
     }
 
-    def printBoard(): Unit = {
-      println(s"${" " * 3} 1 2 3 4 5 6 7 8 [$black=${count(black)} " +
+    def printBoard(board: Board = GlobalBoard, clock: Clock = Clock.empty): Unit = {
+      println(s"${" " * 4} a b c d e f g h [$black=${count(black)} " +
         s"$white=${count(white)} (${countDifference(black, this)})]")
 
       for (row <- 1 to 8) {
-        print(s"${10 * row}  ")
+        print(s"  ${row}  ")
         for (col <- 1 to 8) {
           print(s"${aref(col + row * 10)} ")
         }
         println()
       }
+      println()
+      if (clock.isEmpty) {
+        println(s"[$black = ${clock.toMinsSecs(black.id)} $white = ${clock.toMinsSecs(white.id)}]")
+      }
+      println()
       println()
     }
 
@@ -93,18 +100,6 @@ object Othello {
       else None
     }
 
-    def getMove(strategy: (Piece, Board) => Int, player: Piece, print: Boolean): Board = {
-      if (print) printBoard()
-      val move = strategy.apply(player, this.copy())
-      if (isValidMove(move) && isLegalMove(move, player)) {
-        if (print) println(s"$player moves to $move")
-        makeMove(move, player)
-      } else {
-        println(s"Illegal move: $move")
-        getMove(strategy, player, print)
-      }
-    }
-
     def makeMove(move: Int, player: Piece): Board = {
       aset(move, player)
       for (dir <- allDirections) makeFlips(move, player, dir)
@@ -144,23 +139,92 @@ object Othello {
     board
   }
 
-  def othello(blStrategy: (Piece, Board) => Int, whStrategy: (Piece, Board) => Int, print: Boolean = true): Int = {
+  case class Clock(values: Array[Int]) {
+    def decf(player: Int, amount: Long): Unit = {
+      values(player) = values(player) - amount.toInt
+    }
+
+    def elt(player: Int): Int = values(player)
+
+    def isEmpty(): Boolean = values.isEmpty
+
+    def toMinsSecs(player: Int): String = {
+      val mins = TimeUnit.MILLISECONDS.toMinutes(elt(player))
+      val secs = TimeUnit.MILLISECONDS.toSeconds(elt(player))
+
+      s"$mins:$secs"
+    }
+  }
+
+  object Clock {
+    def apply(minutes: Int): Clock = Clock(Array.fill[Int](List(black.id, white.id).max)(minutes * 60000))
+
+    def empty(): Clock = Clock(Array[Int]())
+  }
+
+  case class OthelloException(result: Int) extends Exception
+
+  var MoveNumber = 1
+
+  def othello(blStrategy: (Piece, Board) => Either[Int, String],
+              whStrategy: (Piece, Board) => Either[Int, String],
+              print: Boolean = true,
+              minutes: Int = 30): Int = {
     val board = initialBoard()
-    var player: Option[Piece] = Some(black)
-    do {
-      val strategy = if (player.get.equals(black)) blStrategy else whStrategy
-      board.getMove(strategy, player.get, print)
-      player = board.nextToPlay(player.get, print)
-    } while (player.isDefined)
+    val clock = Clock(minutes)
+    try {
+      var player: Option[Piece] = Some(black)
+      do {
+        val strategy = if (player.equals(black)) blStrategy else whStrategy
+        getMove(strategy, player.get, board, print, clock)
+        player = board.nextToPlay(player.get, print)
+      } while (player.isDefined)
+    } catch {
+      case ex: OthelloException => return ex.result
+    }
     if (print) {
-      println("The game is over. Final result: ")
+      println("The game is over. Final result:")
       board.printBoard()
     }
     countDifference(black, board)
   }
 
+  val squareNames = SquareNames()
+
+  var GlobalClock = Clock(new Array[Int](3))
+  var GlobalBoard = initialBoard()
+
+  def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
+    if (print) board.printBoard()
+    GlobalClock = clock
+    val t0 = System.currentTimeMillis()
+    GlobalBoard = board
+    val move = strategy.apply(player, GlobalBoard)
+    val t1 = System.currentTimeMillis()
+    clock.decf(player.id, t1 - t0)
+    if (clock.elt(player.id) < 0) {
+      println(s"$player has no time left and forfeits.")
+      throw OthelloException(if (player.equals(black)) -64 else 64)
+    } else if (move.isRight && move.right.get.equals("resign")) {
+      throw OthelloException(if (player.equals(black)) -64 else 64)
+    } else if (move.isLeft && isValidMove(move.left.get) && board.isLegalMove(move.left.get, player)) {
+      if (print) println(s"$player moves to ${squareNames.numericToAlpha(move.left.get)}")
+      board.makeMove(move.left.get, player)
+    } else {
+      move match {
+        case Left(i) => {
+          squareNames.numericToAlpha(i) match {
+            case Left(j) => println(s"Illegal move: $j")
+            case Right(s) => println(s"Illegal move: $s")
+          }
+        }
+        case Right(s) => println(s"Illegal move: $s")
+      }
+      getMove(strategy, player, board, print, clock)
+    }
+  }
+
   def human(player: Piece, board: Board): Int = {
-    val squareNames = SquareNames()
     println(s"$player to move: ${legalMoves(player, board).map((m: Int) => squareNames.numericToAlpha(m).left.get).mkString(" ")}")
     var result: Option[Int] = None
     do {
@@ -213,7 +277,10 @@ object Othello {
     sum1 + sum2
   }
 
-  def minimax(player: Piece, board: Board, ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Option[Int], Option[Int]) = {
+  def minimax(player: Piece,
+              board: Board,
+              ply: Int,
+              evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Option[Int], Option[Either[Int, String]]) = {
     if (ply == 0) evalFn.apply(player, board)
     else {
       val moves = legalMoves(player, board)
@@ -224,14 +291,14 @@ object Othello {
           (Some(-first), None)
         } else (Some(board.finalValue(player)), None)
       } else {
-        var bestMove: Option[Int] = None
+        var bestMove: Option[Either[Int, String]] = None
         var bestVal: Option[Int] = None
         for (move <- moves) {
           val board2 = board.copy().makeMove(move, player)
           val value = -minimax(opponent(player), board2, ply - 1, evalFn)._1.get
           if (bestVal.isEmpty || value > bestVal.get) {
             bestVal = Some(value)
-            bestMove = Some(move)
+            bestMove = Some(Left(move))
           }
         }
         (bestVal, bestMove)
@@ -239,15 +306,16 @@ object Othello {
     }
   }
 
-  def minimaxSearcher(ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Piece, Board) => Int = {
+  def minimaxSearcher(ply: Int,
+                      evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
     (player: Piece, board: Board) => {
       val result = minimax(player, board, ply, evalFn)
-      result._1.get
+      Left(result._1.get)
     }
   }
 
   def alphaBeta(player: Piece, board: Board, achievable: Int, cutoff: Int,
-                ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Option[Int], Option[Int]) = {
+                ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Option[Int], Option[Either[Int, String]]) = {
     if (ply == 0) evalFn.apply(player, board)
     else {
       val moves = legalMoves(player, board)
@@ -270,19 +338,20 @@ object Othello {
               bestMove = move
             }
           })
-        (Some(achievable_), Some(bestMove))
+        (Some(achievable_), Some(Left(bestMove)))
       }
     }
   }
 
-  def alphaBetaSearcher(depth: Int, evalFn: (Piece, Board) => (Option[Int], Option[Int])): (Piece, Board) => Int = {
+  def alphaBetaSearcher(depth: Int,
+                        evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
     (player: Piece, board: Board) => {
       val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
       result._2.get
     }
   }
 
-  def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Option[Int], Option[Int]) = {
+  def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Option[Int], Option[Either[Int, String]]) = {
     (player: Piece, board: Board) => {
       (Some(fn.apply(player, board)), None)
     }
@@ -344,7 +413,7 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-//        othello(human, human)
+    //        othello(human, human)
     othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
   }
 }
