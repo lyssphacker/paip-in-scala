@@ -471,8 +471,8 @@ object Othello {
       }
 
     for (i <- 0 until n) {
-      print(s"${names(i)}${" " * (20 - names(i).length)}" + f"${totals(i)%4.1f}")
-      for (j <- 0 until n) print(f"${if (i == j) " ---" else scores(i)(j)%4.1f}")
+      print(s"${names(i)}${" " * (20 - names(i).length)}" + f"${totals(i)}%4.1f:")
+      for (j <- 0 until n) if (i == j) print(" ---") else print(f"${scores(i)(j)}%4.1f")
       println()
     }
   }
