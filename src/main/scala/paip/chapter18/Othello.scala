@@ -240,9 +240,9 @@ object Othello {
     allSquares.filter((m: Int) => board.isLegalMove(m, player))
   }
 
-  def randomStrategy(player: Piece, board: Board): Int = {
+  def randomStrategy(player: Piece, board: Board): Either[Int, String] = {
     val moves = legalMoves(player, board)
-    moves(Random.nextInt(moves.size))
+    Left(moves(GlobalRandom.nextInt(moves.size)))
   }
 
   def maximizier(evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
@@ -423,7 +423,8 @@ object Othello {
                     strategy2: (Piece, Board) => Either[Int, String],
                     npairs: Int): (Int, Int, List[Int]) = {
     var scores: List[Int] = List.empty
-    1 to npairs foreach((i: Int) => {
+    1 to npairs foreach ((i: Int) => {
+      GlobalRandom = new Random()
       scores = othello(strategy1, strategy2, print = false) +: scores
       scores = -othello(strategy2, strategy1, print = false) +: scores
     })
@@ -434,11 +435,30 @@ object Othello {
     (res1, res2, scores)
   }
 
+  var GlobalRandom: Random = new Random()
+
+  def randomOthelloSeries(strategy1: (Piece, Board) => Either[Int, String],
+                          strategy2: (Piece, Board) => Either[Int, String],
+                          npairs: Int,
+                          nrandom: Int = 10): (Int, Int, List[Int]) = {
+    othelloSeries(switchStrategies(randomStrategy, nrandom, strategy1),
+      switchStrategies(randomStrategy, nrandom, strategy2),
+      npairs)
+  }
+
+  def switchStrategies(strategy1: (Piece, Board) => Either[Int, String],
+                       m: Int,
+                       strategy2: (Piece, Board) => Either[Int, String]): (Piece, Board) => Either[Int, String] = {
+    (player: Piece, board: Board) => (if (MoveNumber >= m) strategy1 else strategy2).apply(player, board)
+  }
+
   def main(args: Array[String]): Unit = {
     //        othello(human, human)
-//    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
-    val result = othelloSeries(alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
-      alphaBetaSearcher(2, adaptFn(weightedSquares)), 5)
+    //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
+    val result = randomOthelloSeries(
+      alphaBetaSearcher(2, adaptFn(weightedSquares)),
+      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
+      5)
     result
   }
 }
