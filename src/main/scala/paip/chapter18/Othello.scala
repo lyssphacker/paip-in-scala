@@ -477,17 +477,32 @@ object Othello {
     }
   }
 
+  def mobility(player: Piece, board: Board): Int = {
+    legalMoves(player, board).length
+  }
+
+  def adaptFn1(fn: (Piece, Board) => Int): (Piece, Board) => Either[Int, String] = {
+    (player: Piece, board: Board) => {
+      Left(fn.apply(player, board))
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     //        othello(human, human)
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
-//    val result = randomOthelloSeries(
-//      alphaBetaSearcher(2, adaptFn(weightedSquares)),
-//      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
-//      5)
-//    result
+    //    val result = randomOthelloSeries(
+    //      alphaBetaSearcher(2, adaptFn(weightedSquares)),
+    //      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
+    //      5)
+    //    result
+    //    roundRobin(
+    //      List(alphaBetaSearcher(4, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)),
+    //      alphaBetaSearcher(4, adaptFn(modifiedWeightedSquares)), randomStrategy), 5, 10,
+    //      List("count-difference", "weighted", "modified-weighted", "random"))
+
     roundRobin(
-      List(alphaBetaSearcher(4, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)),
-      alphaBetaSearcher(4, adaptFn(modifiedWeightedSquares)), randomStrategy), 5, 10,
+      List(adaptFn1(maximizier(countDifference)), adaptFn1(maximizier(mobility)),
+        adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
       List("count-difference", "weighted", "modified-weighted", "random"))
   }
 }
