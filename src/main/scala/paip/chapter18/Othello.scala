@@ -452,6 +452,20 @@ object Othello {
     (player: Piece, board: Board) => (if (MoveNumber >= m) strategy1 else strategy2).apply(player, board)
   }
 
+  def roundRobin(strategies: List[(Piece, Board) => Either[Int, String]],
+                 npairs: Int,
+                 nrandom: Int = 10,
+                 names: List[String]): Unit = {
+    val n = strategies.length
+    val totals = Array.fill[Int](n)(0)
+    val scores = Array.fill[Int](n, n)(0)
+
+    for (i <- 1 to n)
+      for (j <- i + 1 until n) {
+        val wins = randomOthelloSeries(strategies(i), strategies(j), npairs, nrandom)
+      }
+  }
+
   def main(args: Array[String]): Unit = {
     //        othello(human, human)
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
