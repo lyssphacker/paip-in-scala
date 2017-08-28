@@ -41,7 +41,7 @@ object Othello {
       pieces.toList.count(_.equals(p))
     }
 
-    def printBoard(board: Board = GlobalBoard, clock: Clock = Clock.empty): Unit = {
+    def printBoard(clock: Clock = Clock.empty): Unit = {
       println(s"${" " * 4} a b c d e f g h [$black=${count(black)} " +
         s"$white=${count(white)} (${countDifference(black, this)})]")
 
@@ -184,7 +184,7 @@ object Othello {
     }
     if (print) {
       println("The game is over. Final result:")
-      board.printBoard()
+      board.printBoard(clock)
     }
     countDifference(black, board)
   }
@@ -195,7 +195,7 @@ object Othello {
   var GlobalBoard: Board = initialBoard()
 
   def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
-    if (print) board.printBoard()
+    if (print) board.printBoard(clock)
     GlobalClock = clock
     val t0 = System.currentTimeMillis()
     GlobalBoard = board
@@ -425,8 +425,8 @@ object Othello {
     var scores: List[Int] = List.empty
     1 to npairs foreach ((i: Int) => {
       GlobalRandom = new Random()
-      scores = othello(strategy1, strategy2, print = false) +: scores
-      scores = -othello(strategy2, strategy1, print = false) +: scores
+      scores = othello(strategy1, strategy2, print = true) +: scores
+      scores = -othello(strategy2, strategy1, print = true) +: scores
     })
 
     val res1 = countIf(isPositive, scores) + countIf(isZero, scores).toFloat / 2
