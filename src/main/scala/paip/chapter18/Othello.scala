@@ -421,7 +421,7 @@ object Othello {
 
   def othelloSeries(strategy1: (Piece, Board) => Either[Int, String],
                     strategy2: (Piece, Board) => Either[Int, String],
-                    npairs: Int): (Int, Int, List[Int]) = {
+                    npairs: Int): (Float, Int, List[Int]) = {
     var scores: List[Int] = List.empty
     1 to npairs foreach ((i: Int) => {
       GlobalRandom = new Random()
@@ -429,7 +429,7 @@ object Othello {
       scores = -othello(strategy2, strategy1, print = false) +: scores
     })
 
-    val res1 = countIf(isPositive, scores) + countIf(isZero, scores) / 2
+    val res1 = countIf(isPositive, scores) + countIf(isZero, scores).toFloat / 2
     val res2 = scores.sum
 
     (res1, res2, scores)
@@ -440,7 +440,7 @@ object Othello {
   def randomOthelloSeries(strategy1: (Piece, Board) => Either[Int, String],
                           strategy2: (Piece, Board) => Either[Int, String],
                           npairs: Int,
-                          nrandom: Int = 10): (Int, Int, List[Int]) = {
+                          nrandom: Int = 10): (Float, Int, List[Int]) = {
     othelloSeries(switchStrategies(randomStrategy, nrandom, strategy1),
       switchStrategies(randomStrategy, nrandom, strategy2),
       npairs)
@@ -457,22 +457,37 @@ object Othello {
                  nrandom: Int = 10,
                  names: List[String]): Unit = {
     val n = strategies.length
-    val totals = Array.fill[Int](n)(0)
-    val scores = Array.fill[Int](n, n)(0)
+    val totals = Array.fill[Float](n)(0)
+    val scores = Array.fill[Float](n, n)(0)
 
-    for (i <- 1 to n)
+    for (i <- 0 until n)
       for (j <- i + 1 until n) {
-        val wins = randomOthelloSeries(strategies(i), strategies(j), npairs, nrandom)
+        val wins = randomOthelloSeries(strategies(i), strategies(j), npairs, nrandom)._1
+        val losses = 2 * npairs - wins
+        scores(i)(j) += wins
+        scores(j)(i) += losses
+        totals(i) += wins
+        totals(j) += losses
       }
+
+    for (i <- 0 until n) {
+      print(s"${names(i)}${" " * (20 - names(i).length)}" + f"${totals(i)%4.1f}")
+      for (j <- 0 until n) print(f"${if (i == j) " ---" else scores(i)(j)%4.1f}")
+      println()
+    }
   }
 
   def main(args: Array[String]): Unit = {
     //        othello(human, human)
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
-    val result = randomOthelloSeries(
-      alphaBetaSearcher(2, adaptFn(weightedSquares)),
-      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
-      5)
-    result
+//    val result = randomOthelloSeries(
+//      alphaBetaSearcher(2, adaptFn(weightedSquares)),
+//      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
+//      5)
+//    result
+    roundRobin(
+      List(alphaBetaSearcher(4, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)),
+      alphaBetaSearcher(4, adaptFn(modifiedWeightedSquares)), randomStrategy), 5, 10,
+      List("count-difference", "weighted", "modified-weighted", "random"))
   }
 }
