@@ -501,7 +501,7 @@ object Othello {
     //      List("count-difference", "weighted", "modified-weighted", "random"))
 
     roundRobin(
-      List(adaptFn1(maximizier(countDifference)), adaptFn1(maximizier(mobility)),
+      List(adaptFn1(maximizier(countDifference)),
         adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
       List("count-difference", "weighted", "modified-weighted", "random"))
   }
