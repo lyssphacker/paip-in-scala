@@ -190,15 +190,10 @@ object Othello {
 
   val squareNames: SquareNames = SquareNames()
 
-  var GlobalClock: Clock = Clock(new Array[Int](3))
-  var GlobalBoard: Board = initialBoard()
-
   def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
     if (print) board.printBoard(clock)
-    GlobalClock = clock
     val t0 = System.currentTimeMillis()
-    GlobalBoard = board
-    val move = strategy.apply(player, GlobalBoard)
+    val move = strategy.apply(player, board)
     val t1 = System.currentTimeMillis()
     clock.decf(player.id, t1 - t0)
     if (clock.elt(player.id) < 0) {
