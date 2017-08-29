@@ -1,7 +1,7 @@
 package paip.chapter18
 
 import paip.chapter18.Othello.Piece.Piece
-import paip.chapter18.Othello.{Board, legalMoves, opponent, weights}
+import paip.chapter18.Othello.{Board, legalMoves, opponent, weights, initialBoard}
 
 object Othello2 {
   val allSquares: List[Int] = (11 to 88).filter((i: Int) => {
@@ -67,4 +67,6 @@ object Othello2 {
     node.value = -node.value
     node
   }
+
+  val PlyBoards = Array.fill[Board](40)(initialBoard())
 }
