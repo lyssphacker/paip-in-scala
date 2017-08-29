@@ -9,7 +9,16 @@ object Othello2 {
     mod >= 1 && mod <= 8
   }).toList.sortWith(weights(_) > weights(_))
 
-  case class Node(square: Int, board: Board, var value: Int)
+  case class Node(square: Option[Int] = None, board: Board, var value: Int)
+
+  def alphaBetaSearcher2(depth: Int, evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
+    (player: Piece, board: Board) => {
+      val result = alphaBeta2(player,
+        Node(board = board, value = evalFn.apply(player, board)),
+        Board.LosingValue, Board.WinningValue, depth, evalFn)
+      result._2.get.square.get
+    }
+  }
 
   def alphaBeta2(player: Piece,
                  node: Node,
@@ -50,7 +59,7 @@ object Othello2 {
     val moves = legalMoves(player, board)
     moves.map((move: Int) => {
       val newBoard = board.copy().makeMove(move, player)
-      Node(move, newBoard, evalFn.apply(player, newBoard))
+      Node(Some(move), newBoard, evalFn.apply(player, newBoard))
     }).sortWith(_.value > _.value)
   }
 
