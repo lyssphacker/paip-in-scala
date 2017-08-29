@@ -55,6 +55,25 @@ object Othello2 {
     }
   }
 
+  def alphaBeta3(player: Piece,
+                 board: Board,
+                 node: Node,
+                 achievable: Int,
+                 cutoff: Int,
+                 ply: Int,
+                 evalFn: (Piece, Board) => Int,
+                 killer: Int): (Int, Option[Node]) = {
+    if (ply == 0) evalFn.apply(player, board)
+    else {
+      val moves
+    }
+  }
+
+  def putFirst(killer: Int, moves: List[Int]): List[Int] = {
+    if (moves.contains(killer)) killer :: moves.filter((m: Int) => !m.equals(killer))
+    else moves
+  }
+
   def legaNodes(player: Piece, board: Board, evalFn: (Piece, Board) => Int): List[Node] = {
     val moves = legalMoves(player, board)
     moves.map((move: Int) => {
