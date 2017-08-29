@@ -1,7 +1,7 @@
 package paip.chapter18
 
 import paip.chapter18.Othello.Piece.Piece
-import paip.chapter18.Othello.{Board, weights, legalMoves, opponent}
+import paip.chapter18.Othello.{Board, legalMoves, opponent, weights}
 
 object Othello2 {
   val allSquares: List[Int] = (11 to 88).filter((i: Int) => {
@@ -30,12 +30,19 @@ object Othello2 {
           (board.finalValue(player), None)
         }
       } else {
-        val bestNode = nodes.head
-        for (move <- nodes) {
-          val value = 
-        }
+        var bestNode = nodes.head
+        var achievable_ = achievable
+        nodes.iterator.takeWhile((move: Node) => achievable_ >= cutoff).
+          foreach((move: Node) => {
+            val value = -alphaBeta2(opponent(player), negateValue(move),
+              -cutoff, -achievable_, ply - 1, evalFn)._1
+            if (value > achievable_) {
+              achievable_ = value
+              bestNode = move
+            }
+          })
+        (achievable_, Some(bestNode))
       }
-
     }
   }
 
