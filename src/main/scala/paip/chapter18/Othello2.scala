@@ -31,6 +31,9 @@ object Othello2 {
         }
       } else {
         val bestNode = nodes.head
+        for (move <- nodes) {
+          val value = 
+        }
       }
 
     }
