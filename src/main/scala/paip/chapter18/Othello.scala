@@ -42,19 +42,18 @@ object Othello {
     }
 
     def printBoard(clock: Clock = Clock.empty): Unit = {
-      println(s"${" " * 4} a b c d e f g h [$black=${count(black)} " +
+      print(s"${" " * 4} a b c d e f g h [$black=${count(black)} " +
         s"$white=${count(white)} (${countDifference(black, this)})]")
 
       for (row <- 1 to 8) {
+        println()
         print(s"  $row  ")
         for (col <- 1 to 8) {
           print(s"${aref(col + row * 10)} ")
         }
-        println()
       }
-      println()
-      if (clock.isEmpty) {
-        println(s"[$black = ${clock.toMinsSecs(black.id)} $white = ${clock.toMinsSecs(white.id)}]")
+      if (!clock.isEmpty) {
+        print(s"  [$black = ${clock.toMinsSecs(black.id)} $white = ${clock.toMinsSecs(white.id)}]")
       }
       println()
       println()
@@ -149,10 +148,10 @@ object Othello {
     def isEmpty: Boolean = values.isEmpty
 
     def toMinsSecs(player: Int): String = {
-      val mins = TimeUnit.MILLISECONDS.toMinutes(elt(player))
-      val secs = TimeUnit.MILLISECONDS.toSeconds(elt(player))
+      val mins = elt(player) / 60000
+      val secs = (elt(player) % 60000) / 1000
 
-      s"$mins:$secs"
+      f"$mins%02d:$secs%02d"
     }
   }
 
