@@ -74,7 +74,7 @@ object Othello {
     def makeFlips(move: Int, player: Piece, dir: Int): Unit = {
       val bracketer = wouldFlip(move, player, dir)
       if (bracketer.isDefined) {
-        for (c <- (move + dir) to bracketer.get by dir) {
+        for (c <- (move + dir) until bracketer.get by dir) {
           aset(c, player)
         }
       }
