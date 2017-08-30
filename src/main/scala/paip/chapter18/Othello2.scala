@@ -1,6 +1,6 @@
 package paip.chapter18
 
-import paip.chapter18.Othello.Piece.Piece
+import paip.chapter18.Othello.Piece._
 import paip.chapter18.Othello._
 
 import scala.collection.mutable.ArrayBuffer
@@ -31,7 +31,7 @@ object Othello2 {
     if (ply == 0) (node.value, Some(node))
     else {
       val board = node.board
-      val nodes = legaNodes(player, board, evalFn)
+      val nodes = legalNodes(player, board, evalFn)
       if (nodes.isEmpty) {
         if (board.anyLegalMove(opponent(player))) {
           (-alphaBeta2(opponent(player), negateValue(node),
@@ -118,7 +118,7 @@ object Othello2 {
     else moves
   }
 
-  def legaNodes(player: Piece, board: Board, evalFn: (Piece, Board) => Int): List[Node] = {
+  def legalNodes(player: Piece, board: Board, evalFn: (Piece, Board) => Int): List[Node] = {
     val moves = legalMoves(player, board)
     moves.map((move: Int) => {
       val newBoard = board.copy().makeMove(move, player)
@@ -132,4 +132,21 @@ object Othello2 {
   }
 
   val PlyBoards = Array.fill[Board](40)(initialBoard())
+
+  val neighborTable = NeighborTable()
+
+  def mobility(player: Piece, board: Board): (Int, Int) = {
+    val opp = opponent(player)
+    var current = 0
+    var potential = 0
+    for (square <- allSquares) {
+      if (board.aref(square).equals(empty)) {
+        if (board.isLegalMove(square, player))
+          current = current + 1
+        else if (neighborTable.neighbors(square).exists((sq: Int) => board.aref(sq).equals(opp)))
+          potential = potential + 1
+      }
+    }
+    (current, current + potential)
+  }
 }
