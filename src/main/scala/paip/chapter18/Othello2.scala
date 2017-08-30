@@ -164,6 +164,8 @@ object Othello2 {
     List(22, 11, 21, 31, 41, 51, 61, 71, 81, 72),
     List(27, 18, 28, 38, 48, 58, 68, 78, 88, 77))
 
+  val TopEdge: List[Int] = edgeAndXLists.lsts.head
+
   def edgeIndex(player: Piece, board: Board, squares: List[Int]): Int = {
     var index = 0
     for (sq <- squares) {
@@ -173,5 +175,9 @@ object Othello2 {
         else 2)
     }
     index
+  }
+
+  def edgeStability(player: Piece, board: Board): Int = {
+    edgeAndXLists.lsts.map((l: List[Int]) => EdgeTable(edgeIndex(player, board, l))).sum
   }
 }
