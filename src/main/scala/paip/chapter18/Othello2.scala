@@ -163,4 +163,15 @@ object Othello2 {
     List(72, 81, 82, 83, 84, 85, 86, 87, 88, 77),
     List(22, 11, 21, 31, 41, 51, 61, 71, 81, 72),
     List(27, 18, 28, 38, 48, 58, 68, 78, 88, 77))
+
+  def edgeIndex(player: Piece, board: Board, squares: List[Int]): Int = {
+    var index = 0
+    for (sq <- squares) {
+      index = index * 3 +
+        (if (board.aref(sq).equals(empty)) 0
+        else if (board.aref(sq).equals(player)) 1
+        else 2)
+    }
+    index
+  }
 }
