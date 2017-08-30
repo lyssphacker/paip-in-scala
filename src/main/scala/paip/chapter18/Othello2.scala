@@ -105,6 +105,13 @@ object Othello2 {
     arr
   }
 
+  def alphaBetaSearcher3(depth: Int, evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
+    (player: Piece, board: Board) => {
+      val result = alphaBeta3(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn, None)
+      result._2.get
+    }
+  }
+
   def putFirst(killer: Option[Int], moves: List[Int]): List[Int] = {
     if (killer.isDefined && moves.contains(killer.get))
       killer.get :: moves.filter((m: Int) => !m.equals(killer.get))
