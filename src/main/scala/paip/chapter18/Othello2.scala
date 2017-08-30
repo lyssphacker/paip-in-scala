@@ -131,7 +131,7 @@ object Othello2 {
     node
   }
 
-  val PlyBoards = Array.fill[Board](40)(initialBoard())
+  val PlyBoards: Array[Board] = Array.fill[Board](40)(initialBoard())
 
   val neighborTable = NeighborTable()
 
@@ -150,7 +150,7 @@ object Othello2 {
     (current, current + potential)
   }
 
-  val EdgeTable = Array[Int](scala.math.pow(3, 10).toInt)
+  val EdgeTable: Array[Int] = Array[Int](scala.math.pow(3, 10).toInt)
 
   case class EdgeAndXLists(lsts: List[List[Int]])
 
