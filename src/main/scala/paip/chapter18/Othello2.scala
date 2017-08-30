@@ -1,7 +1,9 @@
 package paip.chapter18
 
 import paip.chapter18.Othello.Piece.Piece
-import paip.chapter18.Othello.{Board, legalMoves, opponent, weights, initialBoard}
+import paip.chapter18.Othello._
+
+import scala.collection.mutable.ArrayBuffer
 
 object Othello2 {
   val allSquares: List[Int] = (11 to 88).filter((i: Int) => {
@@ -57,20 +59,55 @@ object Othello2 {
 
   def alphaBeta3(player: Piece,
                  board: Board,
-                 node: Node,
                  achievable: Int,
                  cutoff: Int,
                  ply: Int,
                  evalFn: (Piece, Board) => Int,
-                 killer: Int): (Int, Option[Node]) = {
-    if (ply == 0) evalFn.apply(player, board)
+                 killer: Option[Int]): (Int, Option[Int]) = {
+    if (ply == 0) (evalFn.apply(player, board), None)
     else {
-      val moves
+      val moves = putFirst(killer, legalMoves(player, board))
+      if (moves.isEmpty) {
+        if (board.anyLegalMove(player))
+          (-alphaBeta3(opponent(player), board, -cutoff, -achievable, ply - 1, evalFn, None)._1, None)
+        else (board.finalValue(player), None)
+      } else {
+        var bestMove = moves.head
+        val newBoard = PlyBoards(ply)
+        var killer2: Option[Int] = None
+        var killer2Val = Board.WinningValue
+        var achievable_ = achievable
+        moves.iterator.takeWhile((i: Int) => achievable_ >= cutoff).
+          foreach((move: Int) => {
+            val result = alphaBeta3(opponent(player),
+              Board(replace(newBoard.pieces.to[ArrayBuffer], board.pieces)).makeMove(move, player),
+              -cutoff, -achievable_, ply - 1, evalFn, killer2)
+            result match {
+              case (value, reply) => {
+                if (-value > achievable_) {
+                  achievable_ = value
+                  bestMove = value
+                }
+                if (reply.isDefined && value < killer2Val) {
+                  killer2 = reply
+                  killer2Val = value
+                }
+              }
+            }
+          })
+        (achievable_, Some(bestMove))
+      }
     }
   }
 
-  def putFirst(killer: Int, moves: List[Int]): List[Int] = {
-    if (moves.contains(killer)) killer :: moves.filter((m: Int) => !m.equals(killer))
+  def replace(ab: ArrayBuffer[Piece], arr: Array[Piece]): Array[Piece] = {
+    for (i <- ab.indices) ab(i) = arr(i)
+    arr
+  }
+
+  def putFirst(killer: Option[Int], moves: List[Int]): List[Int] = {
+    if (killer.isDefined && moves.contains(killer.get))
+      killer.get :: moves.filter((m: Int) => !m.equals(killer.get))
     else moves
   }
 
