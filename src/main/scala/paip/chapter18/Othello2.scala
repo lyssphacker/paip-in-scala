@@ -149,4 +149,18 @@ object Othello2 {
     }
     (current, current + potential)
   }
+
+  val EdgeTable = Array[Int](scala.math.pow(3, 10).toInt)
+
+  case class EdgeAndXLists(lsts: List[List[Int]])
+
+  object EdgeAndXLists {
+    def apply(lsts: List[Int]*): EdgeAndXLists = EdgeAndXLists(lsts.toList)
+  }
+
+  val edgeAndXLists = EdgeAndXLists(
+    List(22, 11, 12, 13, 14, 15, 16, 17, 18, 27),
+    List(72, 81, 82, 83, 84, 85, 86, 87, 88, 77),
+    List(22, 11, 21, 31, 41, 51, 61, 71, 81, 72),
+    List(27, 18, 28, 38, 48, 58, 68, 78, 88, 77))
 }
