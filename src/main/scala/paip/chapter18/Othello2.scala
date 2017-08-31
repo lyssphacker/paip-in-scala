@@ -274,7 +274,7 @@ object Othello2 {
   }
 
   def countEdgeNeighbors(player: Piece, board: Board, square: Int): Int = {
-    countIf((inc: Int) => board.aref(square + inc).equals(player), board.pieces.toList.map(_.id))
+    countIf((inc: Int) => board.aref(square + inc).equals(player), List(1, -1))
   }
 
 }
