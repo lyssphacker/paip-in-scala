@@ -150,7 +150,7 @@ object Othello2 {
     (current, current + potential)
   }
 
-  val EdgeTable: Array[Int] = Array[Int](scala.math.pow(3, 10).toInt)
+  val EdgeTable: Array[BigDecimal] = Array[BigDecimal](scala.math.pow(3, 10).toInt)
 
   case class EdgeAndXLists(lsts: List[List[Int]])
 
@@ -181,14 +181,14 @@ object Othello2 {
     edgeAndXLists.lsts.map((l: List[Int]) => EdgeTable(edgeIndex(player, board, l))).sum
   }
 
-//  def initEdgeTable(): Unit = {
-//    for(npieces <- 1 to 10)
-//  }
+  //  def initEdgeTable(): Unit = {
+  //    for(npieces <- 1 to 10)
+  //  }
 
   val staticEdgeTable: StaticEdgeTable =
-    StaticEdgeTable(Array("*", 0 -2000),
-                    Array(700, "*", "*"),
-                    Array(1200, 200, .25))
+    StaticEdgeTable(Array("*", 0 - 2000),
+      Array(700, "*", "*"),
+      Array(1200, 200, .25))
 
   case class StaticEdgeTable(values: Array[Array[Any]]) {
     def aref(i1: Int, i2: Int): Int = {
@@ -223,9 +223,41 @@ object Othello2 {
       val pair = map.find((e: (Int, Int)) => e._2 == xsq)
       if (pair.isDefined) Some(pair.get._2)
       else None
+    }
   }
 
   object CornerXsqs {
     def apply(values: (Int, Int)*): CornerXsqs = new CornerXsqs(values.toMap)
+  }
+
+  def mapEdgeNPieces(fn: (Board, Int) => Option[Int], player: Piece, board: Board, n: Int, squares: List[Int], index: Int): Option[Int] = {
+    if (squares.length > n) None
+    else if (squares.isEmpty) fn.apply(board, index)
+    else {
+      val index3 = 3 * index
+      val sq = squares.head
+      mapEdgeNPieces(fn, player, board, n, squares.tail, index3)
+      if (n > 0 && board.aref(sq).equals(empty)) {
+        board.aset(sq, player)
+        mapEdgeNPieces(fn, player, board, n - 1, squares.tail, 1 + index3)
+        board.aset(sq, opponent(player))
+        mapEdgeNPieces(fn, player, board, n - 1, squares.tail, 2 + index3)
+        board.aset(sq, empty)
+        Some(empty.id)
+      } else None
+    }
+  }
+
+  def combineEdgeMoves(possibilities: List[List[BigDecimal]], player: Piece): Int = {
+    val prob = BigDecimal(1)
+    val value = BigDecimal(0)
+    val fn =
+      if (player.equals(black))
+        (b1: BigDecimal, b2: BigDecimal) => b1 > b2
+      else
+        (b1: BigDecimal, b2: BigDecimal) => b1 < b2
+
+    for (pair <- possibilities.sortWith(fn.apply()))
+
   }
 }
