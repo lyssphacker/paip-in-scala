@@ -4,6 +4,7 @@ import paip.chapter18.Othello.Piece._
 import paip.chapter18.Othello._
 
 import scala.collection.mutable.ArrayBuffer
+import scala.math.BigDecimal.RoundingMode
 
 object Othello2 {
   val allSquares: List[Int] = (11 to 88).filter((i: Int) => {
@@ -249,15 +250,24 @@ object Othello2 {
   }
 
   def combineEdgeMoves(possibilities: List[List[BigDecimal]], player: Piece): Int = {
-    val prob = BigDecimal(1)
-    val value = BigDecimal(0)
-    val fn =
+    var prob = BigDecimal(1.0)
+    var value = BigDecimal(0.0)
+    val fn: (BigDecimal, BigDecimal) => Boolean =
       if (player.equals(black))
         (b1: BigDecimal, b2: BigDecimal) => b1 > b2
       else
         (b1: BigDecimal, b2: BigDecimal) => b1 < b2
 
-    for (pair <- possibilities.sortWith(fn.apply()))
+    val sorted = possibilities.sortWith((l1: List[BigDecimal], l2: List[BigDecimal]) => {
+      fn.apply(l1.tail.head, l2.tail.head)
+    })
 
+    sorted.iterator.takeWhile((l: List[BigDecimal]) => prob >= BigDecimal(0.0)).
+      foreach((pair: List[BigDecimal]) => {
+        value = value + (prob * pair.head * pair.tail.head)
+        prob = prob - (prob * pair.head)
+      })
+
+    value.setScale(0, RoundingMode.HALF_UP).toInt
   }
 }
