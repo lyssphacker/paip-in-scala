@@ -178,7 +178,7 @@ object Othello2 {
     index
   }
 
-  def edgeStability(player: Piece, board: Board): Int = {
+  def edgeStability(player: Piece, board: Board): BigDecimal = {
     edgeAndXLists.lsts.map((l: List[Int]) => EdgeTable(edgeIndex(player, board, l))).sum
   }
 
