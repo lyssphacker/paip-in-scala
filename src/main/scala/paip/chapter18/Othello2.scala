@@ -273,5 +273,8 @@ object Othello2 {
     value.setScale(0, RoundingMode.HALF_UP).toInt
   }
 
+  def countEdgeNeighbors(player: Piece, board: Board, square: Int): Int = {
+    countIf((inc: Int) => board.aref(square + inc).equals(player), board.pieces.toList.map(_.id))
+  }
 
 }
