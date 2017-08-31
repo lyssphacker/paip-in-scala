@@ -180,4 +180,52 @@ object Othello2 {
   def edgeStability(player: Piece, board: Board): Int = {
     edgeAndXLists.lsts.map((l: List[Int]) => EdgeTable(edgeIndex(player, board, l))).sum
   }
+
+//  def initEdgeTable(): Unit = {
+//    for(npieces <- 1 to 10)
+//  }
+
+  val staticEdgeTable: StaticEdgeTable =
+    StaticEdgeTable(Array("*", 0 -2000),
+                    Array(700, "*", "*"),
+                    Array(1200, 200, .25))
+
+  case class StaticEdgeTable(values: Array[Array[Any]]) {
+    def aref(i1: Int, i2: Int): Int = {
+      values(i1)(i2).asInstanceOf[Int]
+    }
+  }
+
+  object StaticEdgeTable {
+    def apply(arrs: Array[Any]*): StaticEdgeTable = StaticEdgeTable(arrs.toArray)
+  }
+
+  def staticEdgeStability(player: Piece, board: Board): Int = {
+    TopEdge.zip(0 to TopEdge.size).map((z: (Int, Int)) => {
+      if (board.aref(z._1).equals(empty)) 0
+      else if (board.aref(z._1).equals(player)) staticEdgeTable.aref(z._2, pieceStability(board, z._1))
+      else -staticEdgeTable.aref(z._2, pieceStability(board, z._1))
+    }).sum
+  }
+
+  def pieceStability(board: Board, sq: Int): Int = {
+
+  }
+
+  case class CornerXsqs(map: Map[Int, Int]) {
+    def isCorner(sq: Int): Boolean = map.keySet.contains(sq)
+
+    def isXSquare(sq: Int): Boolean = map.values.exists(_ == sq)
+
+    def xSquareFor(corner: Int): Option[Int] = map.get(corner)
+
+    def cornerFor(xsq: Int): Option[Int] = {
+      val pair = map.find((e: (Int, Int)) => e._2 == xsq)
+      if (pair.isDefined) Some(pair.get._2)
+      else None
+  }
+
+  object CornerXsqs {
+    def apply(values: (Int, Int)*): CornerXsqs = new CornerXsqs(values.toMap)
+  }
 }
