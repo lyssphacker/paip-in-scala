@@ -227,6 +227,8 @@ object Othello2 {
     }
   }
 
+  val cornerXsqs: CornerXsqs = CornerXsqs((11, 22), (18, 27), (81, 72), (88, 77))
+
   object CornerXsqs {
     def apply(values: (Int, Int)*): CornerXsqs = new CornerXsqs(values.toMap)
   }
@@ -270,4 +272,6 @@ object Othello2 {
 
     value.setScale(0, RoundingMode.HALF_UP).toInt
   }
+
+
 }
