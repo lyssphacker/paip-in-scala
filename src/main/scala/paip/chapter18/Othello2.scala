@@ -3,7 +3,9 @@ package paip.chapter18
 import paip.chapter18.Othello.Piece._
 import paip.chapter18.Othello._
 
+import scala.collection.immutable.Range
 import scala.collection.mutable.ArrayBuffer
+import scala.math
 import scala.math.BigDecimal.RoundingMode
 
 object Othello2 {
@@ -277,4 +279,23 @@ object Othello2 {
     countIf((inc: Int) => board.aref(square + inc).equals(player), List(1, -1))
   }
 
+  def edgeMoveProbability(player: Piece, board: Board, square: Int): BigDecimal = {
+    if (cornerXsqs.isXSquare(square)) BigDecimal(0.5)
+    else if (board.isLegalMove(square, player)) BigDecimal(1.0)
+    else if (cornerXsqs.isCorner(square)) {
+      val xSq = cornerXsqs.xSquareFor(square)
+      if (xSq.isDefined && board.aref(xSq.get).equals(empty)) BigDecimal(0.1)
+      else if (xSq.isDefined && board.aref(xSq.get).equals(player)) BigDecimal(0.001)
+      else BigDecimal(0.9)
+    }
+    else {
+      val i1 = countEdgeNeighbors(player, board, square)
+      val i2 = countEdgeNeighbors(opponent(player), board, square)
+      val value = Array(
+        Array(BigDecimal(0.1), BigDecimal(0.4), BigDecimal(0.7)),
+        Array(BigDecimal(0.05), BigDecimal(0.3), None),
+        Array(BigDecimal(0.01), None, None)
+      )(i1)(i2)
+    }
+  }
 }
