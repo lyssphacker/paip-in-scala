@@ -245,14 +245,16 @@ object Othello2 {
     else {
       val player = board.aref(sq)
       val opp = opponent(player)
-      val p1 = board.pieces.slice(sq, 19).find((p: Piece) => !p.equals(player)).get
-      val p2 = board.pieces.slice(11, sq).reverse.find((p: Piece) => !p.equals(player)).get
+      val p1 = board.pieces.slice(sq, 19).find((p: Piece) => !p.equals(player))
+      val p2 = board.pieces.slice(11, sq).reverse.find((p: Piece) => !p.equals(player))
 
-      if ((p1.equals(empty) && p2.equals(opp)) || (p2.equals(empty) && p1.equals(opp))) Unstable
-      else if (p1.equals(opp) && p2.equals(opp) &&
-        board.pieces.slice(11, 19).exists((p: Piece) => p.equals(empty))) SemiStable
-      else if (p1.equals(empty) && p2.equals(empty)) SemiStable
-      else Stable
+      if (p1.isDefined && p2.isDefined) {
+        if ((p1.get.equals(empty) && p2.get.equals(opp)) || (p2.get.equals(empty) && p1.get.equals(opp))) Unstable
+        else if (p1.get.equals(opp) && p2.get.equals(opp) &&
+          board.pieces.slice(11, 19).exists((p: Piece) => p.equals(empty))) SemiStable
+        else if (p1.get.equals(empty) && p2.get.equals(empty)) SemiStable
+        else Stable
+      } else Stable
     }
   }
 
