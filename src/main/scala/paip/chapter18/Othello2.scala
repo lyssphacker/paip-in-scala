@@ -189,9 +189,18 @@ object Othello2 {
   //  }
 
   val staticEdgeTable: StaticEdgeTable =
-    StaticEdgeTable(Array("*", 0 - 2000),
+    StaticEdgeTable(
+      Array("*", 0 - 2000),
       Array(700, "*", "*"),
-      Array(1200, 200, .25))
+      Array(1200, 200, -25),
+      Array(1000, 200, 75),
+      Array(1000, 200, 50),
+      Array(1000, 200, 50),
+      Array(1000, 200, 75),
+      Array(1200, 200, -25),
+      Array(700, "*", "*"),
+      Array("*", 0, -2000)
+    )
 
   case class StaticEdgeTable(values: Array[Array[Any]]) {
     def aref(i1: Int, i2: Int): Int = {
