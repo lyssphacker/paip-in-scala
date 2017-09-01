@@ -220,6 +220,10 @@ object Othello2 {
     }).sum
   }
 
+  val Stable: Int = 0
+  val SemiStable: Int = 1
+  val Unstable: Int = 2
+
   def pieceStability(board: Board, sq: Int): Int = {
 
   }
