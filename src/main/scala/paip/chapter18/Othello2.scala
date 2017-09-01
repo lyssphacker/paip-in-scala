@@ -3,9 +3,7 @@ package paip.chapter18
 import paip.chapter18.Othello.Piece._
 import paip.chapter18.Othello._
 
-import scala.collection.immutable.Range
 import scala.collection.mutable.ArrayBuffer
-import scala.math
 import scala.math.BigDecimal.RoundingMode
 
 object Othello2 {
@@ -225,7 +223,21 @@ object Othello2 {
   val Unstable: Int = 2
 
   def pieceStability(board: Board, sq: Int): Int = {
+    if (cornerXsqs.isCorner(sq)) Stable
+    else if (cornerXsqs.isXSquare(sq) && cornerXsqs.cornerFor(sq).isDefined)
+      if (board.aref(cornerXsqs.cornerFor(sq).get).equals(empty)) Unstable else SemiStable
+    else {
+      val player = board.aref(sq)
+      val opp = opponent(player)
+      val p1 = board.pieces.slice(sq, 19).find((p: Piece) => !p.equals(player)).get
+      val p2 = board.pieces.slice(11, sq).reverse.find((p: Piece) => !p.equals(player)).get
 
+      if ((p1.equals(empty) && p2.equals(opp)) || (p2.equals(empty) && p1.equals(opp))) Unstable
+      else if (p1.equals(opp) && p2.equals(opp) &&
+        board.pieces.slice(11, 19).find((p: Piece) => p.equals(empty)).isDefined) SemiStable
+      else if (p1.equals(empty) && p2.equals(empty)) SemiStable
+      else Stable
+    }
   }
 
   case class CornerXsqs(map: Map[Int, Int]) {
