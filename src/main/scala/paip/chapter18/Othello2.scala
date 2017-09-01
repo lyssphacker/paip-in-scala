@@ -151,7 +151,7 @@ object Othello2 {
     (current, current + potential)
   }
 
-  val EdgeTable: Array[BigDecimal] = Array[BigDecimal](scala.math.pow(3, 10).toInt)
+  val EdgeTable: Array[BigDecimal] = Array.fill[BigDecimal](scala.math.pow(3, 10).toInt)(BigDecimal(0.0))
 
   case class EdgeAndXLists(lsts: List[List[Int]])
 
