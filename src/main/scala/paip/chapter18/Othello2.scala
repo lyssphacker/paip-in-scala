@@ -291,11 +291,12 @@ object Othello2 {
     else {
       val i1 = countEdgeNeighbors(player, board, square)
       val i2 = countEdgeNeighbors(opponent(player), board, square)
-      val value = Array(
+      val arr = Array(
         Array(BigDecimal(0.1), BigDecimal(0.4), BigDecimal(0.7)),
         Array(BigDecimal(0.05), BigDecimal(0.3), None),
         Array(BigDecimal(0.01), None, None)
-      )(i1)(i2)
+      )
+      arr(i1)(i2).asInstanceOf[BigDecimal] / (if (board.isLegalMove(square, opponent(player))) 1 else 2)
     }
   }
 }
