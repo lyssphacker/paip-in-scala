@@ -182,9 +182,25 @@ object Othello2 {
     edgeAndXLists.lsts.map((l: List[Int]) => EdgeTable(edgeIndex(player, board, l))).sum
   }
 
-  //  def initEdgeTable(): Unit = {
-  //    for(npieces <- 1 to 10)
-  //  }
+  def initEdgeTable(): Unit = {
+    for (npieces <- 1 to 10) {
+      mapEdgeNPieces((board: Board, index: Int) => {
+        val value = staticEdgeStability(black, board)
+        EdgeTable(index) = value
+        Some(value)
+      }, black, initialBoard(), npieces, TopEdge, 0)
+    }
+
+    for (i <- 1 until 5) {
+      for (npieces <- 9 to 1 by -1) {
+        mapEdgeNPieces((board: Board, index: Int) => {
+          val value = possibleEdgeMovesValue(black, board, index)
+          EdgeTable(index) = value
+          Some(value)
+        }, black, initialBoard(), npieces, TopEdge, 0)
+      }
+    }
+  }
 
   val staticEdgeTable: StaticEdgeTable =
     StaticEdgeTable(
@@ -234,7 +250,7 @@ object Othello2 {
 
       if ((p1.equals(empty) && p2.equals(opp)) || (p2.equals(empty) && p1.equals(opp))) Unstable
       else if (p1.equals(opp) && p2.equals(opp) &&
-        board.pieces.slice(11, 19).find((p: Piece) => p.equals(empty)).isDefined) SemiStable
+        board.pieces.slice(11, 19).exists((p: Piece) => p.equals(empty))) SemiStable
       else if (p1.equals(empty) && p2.equals(empty)) SemiStable
       else Stable
     }
@@ -336,4 +352,8 @@ object Othello2 {
     newBoard.makeMove(sq, player)
     List(edgeMoveProbability(player, board, sq), -EdgeTable(edgeIndex(opponent(player), newBoard, TopEdge)))
   }
+
+  def main(args: Array[String]): Unit = {
+  }
+
 }
