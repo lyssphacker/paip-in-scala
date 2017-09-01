@@ -299,4 +299,16 @@ object Othello2 {
       arr(i1)(i2).asInstanceOf[BigDecimal] / (if (board.isLegalMove(square, opponent(player))) 1 else 2)
     }
   }
+
+  def possibleEdgeMovesValue(player: Piece, board: Board, index: Int): Int = {
+    val possibilities = List(BigDecimal(1.0), EdgeTable(index)) ::
+      TopEdge.filter((sq: Int) => board.aref(sq).equals(empty)).map((sq: Int) => possibleEdgeMove(player, board, sq))
+    combineEdgeMoves(possibilities, player)
+  }
+
+  def possibleEdgeMove(player: Piece, board: Board, sq: Int): List[BigDecimal] = {
+    val newBoard = Board(replace(PlyBoards(player.id).pieces.to[ArrayBuffer], board.pieces))
+    newBoard.makeMove(sq, player)
+    List(edgeMoveProbability(player, board, sq), -EdgeTable(edgeIndex(opponent(player), newBoard, TopEdge)))
+  }
 }
