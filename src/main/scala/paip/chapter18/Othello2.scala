@@ -277,7 +277,7 @@ object Othello2 {
   }
 
   def mapEdgeNPieces(fn: (Board, Int) => Option[Int], player: Piece, board: Board, n: Int, squares: List[Int], index: Int): Option[Int] = {
-    if (squares.length > n) None
+    if (squares.length < n) None
     else if (squares.isEmpty) fn.apply(board, index)
     else {
       val index3 = 3 * index
