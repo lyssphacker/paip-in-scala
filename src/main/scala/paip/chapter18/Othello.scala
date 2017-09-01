@@ -370,7 +370,7 @@ object Othello {
 
   object NeighborTable {
     def apply(): NeighborTable = {
-      val squares = new Array[List[Int]](100)
+      val squares = Array.fill[List[Int]](100)(List())
       for (square <- allSquares)
         for (dir <- allDirections)
           if (isValidMove(square + dir))
