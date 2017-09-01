@@ -183,7 +183,7 @@ object Othello2 {
   }
 
   def initEdgeTable(): Unit = {
-    for (npieces <- 1 to 10) {
+    for (npieces <- 0 until 10) {
       mapEdgeNPieces((board: Board, index: Int) => {
         val value = staticEdgeStability(black, board)
         EdgeTable(index) = value
