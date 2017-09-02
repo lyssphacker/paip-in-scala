@@ -355,6 +355,27 @@ object Othello2 {
     List(edgeMoveProbability(player, board, sq), -EdgeTable(edgeIndex(opponent(player), newBoard, TopEdge)))
   }
 
+  val MoveNumber: Int = 1
+
+  def iagoEval(player: Piece, board: Board): Int = {
+    val cEdg = 312000 + 6240 * MoveNumber
+    val cCur = if (MoveNumber < 25) 6240 + (2000 * MoveNumber) else 75000 + (1000 * MoveNumber)
+    val cPot = 20000
+
+    val (pCur, pPot) = mobility(player, board)
+    val (oCur, oPot) = mobility(opponent(player), board)
+
+    val ret1 = cEdg * edgeStability(player, board) * 32000
+    val ret2 = cCur * (pCur - oCur) * (pCur + oCur + 2)
+    val ret3 = cPot * (pPot - oPot) * (pPot + oPot + 2)
+
+    ret1.setScale(0, RoundingMode.HALF_UP).toInt + ret2 + ret3
+  }
+
+  def iago(depth: Int): (Piece, Board) => Int = {
+    alphaBetaSearcher3(depth, iagoEval)
+  }
+
   def main(args: Array[String]): Unit = {
     initEdgeTable()
   }
