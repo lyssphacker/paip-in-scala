@@ -19,13 +19,21 @@ object AllPossibleRewrites {
 
   case class Expansion(values: List[Any])
 
-  def combineAll(xlist: List[Any], ylist: List[Any]): List[Any] = {
-    mappend((y: Any) =>
-      mapcar((x: Any) => {
+  def combineAll[T](xlist: List[T], ylist: List[T]): List[Expansion] = {
+    mappend[T, Expansion]((y: T) =>
+      mapcar[T, Expansion]((x: T) => {
         val Expansion(xval) = x
         val Expansion(yval) = y
         Expansion(xval ::: yval)
       }, xlist), ylist)
+  }
+
+  def mapcar[T, S](fn: T => S, lst: List[T]): List[S] = {
+    lst.map(fn)
+  }
+
+  def mappend[T, S](fn: T => List[S], lst: List[T]): List[S] = {
+    lst.flatMap(fn)
   }
 
   def generateAll(phrase: Any): List[Any] = {
