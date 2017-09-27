@@ -26,6 +26,9 @@ object Othello {
     else black
   }
 
+  /**
+    * Game board.
+    */
   case class Board(pieces: Array[Piece]) {
     def aref(square: Int): Piece = {
       pieces(square)
@@ -39,6 +42,9 @@ object Othello {
       pieces.toList.count(_.equals(p))
     }
 
+    /**
+      * Print a board, along with some statistics.
+      */
     def printBoard(clock: Clock = Clock.empty): Unit = {
       print(s"${" " * 4} a b c d e f g h [$black=${count(black)} " +
         s"$white=${count(white)} (${countDifference(black, this)})]")
@@ -188,6 +194,9 @@ object Othello {
     }
   }
 
+  /**
+    * Game clock.
+    */
   object Clock {
     def apply(minutes: Int): Clock = Clock(Array.fill[Int](List(black.id, white.id).max + 1)(minutes * 60000))
 
@@ -198,6 +207,10 @@ object Othello {
 
   var MoveNumber = 1
 
+  /**
+    * Play a game of othello.  Return the score, where a positive
+    * difference means black, the first player, wins.
+    */
   def othello(blStrategy: (Piece, Board) => Either[Int, String],
               whStrategy: (Piece, Board) => Either[Int, String],
               print: Boolean = true,
@@ -223,6 +236,10 @@ object Othello {
 
   val squareNames: SquareNames = SquareNames()
 
+  /**
+    * Call the player's strategy function to get a move.
+    * Keep calling until a legal move is made.
+    */
   def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
     if (print) board.printBoard(clock)
     val t0 = System.currentTimeMillis()
@@ -250,6 +267,9 @@ object Othello {
     }
   }
 
+  /**
+    * A human player for the game of Othello
+    */
   def human(player: Piece, board: Board): Int = {
     println(s"$player to move: ${legalMoves(player, board).map((m: Int) => squareNames.numericToAlpha(m).left.get).mkString(" ")}")
     var result: Option[Int] = None
@@ -399,6 +419,9 @@ object Othello {
     }
   }
 
+  /**
+    * A strategy that searches to DEPTH and then uses EVAL-FN.
+    */
   def alphaBetaSearcher(depth: Int,
                         evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
     (player: Piece, board: Board) => {
@@ -413,6 +436,10 @@ object Othello {
     }
   }
 
+  /**
+    * Like WEIGHTED-SQUARES, but don't take off for moving
+    * near an occupied corner.
+    */
   def modifiedWeightedSquares(player: Piece, board: Board): Int = {
     var w = weightedSquares(player, board)
     val neighborTable = NeighborTable()
@@ -426,6 +453,9 @@ object Othello {
   }
 
   case class NeighborTable(squares: Array[List[Int]]) {
+    /**
+      * Return a list of all squares adjacent to a square.
+      */
     def neighbors(square: Int): List[Int] = {
       squares(square)
     }
@@ -444,12 +474,18 @@ object Othello {
   }
 
   case class SquareNames(names: List[String]) {
+    /**
+      * Convert from alphanumeric to numeric square notation.
+      */
     def alphaToNumeric(str: String): Either[Int, String] = {
       val position = names.indexOf(str)
       if (position == -1) Right(str)
       else Left(position)
     }
 
+    /**
+      * Convert from numeric to alphanumeric square notation.
+      */
     def numericToAlpha(num: Int): Either[Int, String] = {
       if (isValidMove(num)) Right(names(num))
       else Left(num)
@@ -479,6 +515,9 @@ object Othello {
 
   def isZero(i: Int): Boolean = i == 0
 
+  /**
+    * Play a series of 2*n-pairs games, swapping sides.
+    */
   def othelloSeries(strategy1: (Piece, Board) => Either[Int, String],
                     strategy2: (Piece, Board) => Either[Int, String],
                     npairs: Int): (Float, Int, List[Int]) = {
@@ -497,6 +536,9 @@ object Othello {
 
   var GlobalRandom: Random = new Random()
 
+  /**
+    * Play a series of 2*n games, starting from a random position.
+    */
   def randomOthelloSeries(strategy1: (Piece, Board) => Either[Int, String],
                           strategy2: (Piece, Board) => Either[Int, String],
                           npairs: Int,
@@ -506,12 +548,22 @@ object Othello {
       npairs)
   }
 
+  /**
+    * Make a new strategy that plays strategy1 for m moves,
+    * then plays according to strategy2.
+    */
   def switchStrategies(strategy1: (Piece, Board) => Either[Int, String],
                        m: Int,
                        strategy2: (Piece, Board) => Either[Int, String]): (Piece, Board) => Either[Int, String] = {
     (player: Piece, board: Board) => (if (MoveNumber >= m) strategy1 else strategy2).apply(player, board)
   }
 
+  /**
+    * Play a tournament among the strategies.
+    * N-PAIRS = games each strategy plays as each color against
+    * each opponent.  So with N strategies, a total of
+    * N*(N-1)*N-PAIRS games are played.
+    */
   def roundRobin(strategies: List[(Piece, Board) => Either[Int, String]],
                  npairs: Int,
                  nrandom: Int = 10,
@@ -537,6 +589,9 @@ object Othello {
     }
   }
 
+  /**
+    * The number of moves a player has.
+    */
   def mobility(player: Piece, board: Board): Int = {
     legalMoves(player, board).length
   }
