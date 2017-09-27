@@ -14,6 +14,9 @@ object Othello2 {
 
   case class Node(square: Option[Int] = None, board: Board, var value: Int)
 
+  /**
+    * Return a strategy that does A-B search with sorted moves.
+    */
   def alphaBetaSearcher2(depth: Int, evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
     (player: Piece, board: Board) => {
       val result = alphaBeta2(player,
@@ -23,6 +26,9 @@ object Othello2 {
     }
   }
 
+  /**
+    * A-B search, sorting moves by eval-fn
+    */
   def alphaBeta2(player: Piece,
                  node: Node,
                  achievable: Int,
@@ -58,6 +64,9 @@ object Othello2 {
     }
   }
 
+  /**
+    * A-B search, putting killer move first.
+    */
   def alphaBeta3(player: Piece,
                  board: Board,
                  achievable: Int,
@@ -106,6 +115,9 @@ object Othello2 {
     arr
   }
 
+  /**
+    * Return a strategy that does A-B search with killer moves.
+    */
   def alphaBetaSearcher3(depth: Int, evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
     (player: Piece, board: Board) => {
       val result = alphaBeta3(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn, None)
@@ -113,6 +125,10 @@ object Othello2 {
     }
   }
 
+  /**
+    * Move the killer move to the front of moves,
+    * if the killer move is in fact a legal move.
+    */
   def putFirst(killer: Option[Int], moves: List[Int]): List[Int] = {
     if (killer.isDefined && moves.contains(killer.get))
       killer.get :: moves.filter((m: Int) => !m.equals(killer.get))
@@ -127,6 +143,9 @@ object Othello2 {
     }).sortWith(_.value > _.value)
   }
 
+  /**
+    * Set the value of a node to its negative.
+    */
   def negateValue(node: Node): Node = {
     node.value = -node.value
     node
@@ -136,6 +155,12 @@ object Othello2 {
 
   val neighborTable = NeighborTable()
 
+  /**
+    * Current Mobility is the number of legal moves.
+    * Potential mobility is the number of blank squares
+    * adjacent to an opponent that are not legal moves.
+    * Returns current and potential mobility for player.
+    */
   def mobility(player: Piece, board: Board): (Int, Int) = {
     val opp = opponent(player)
     var current = 0
@@ -151,6 +176,9 @@ object Othello2 {
     (current, current + potential)
   }
 
+  /**
+    * Array of values to player-to-move for edge positions.
+    */
   val EdgeTable: Array[BigDecimal] = Array.fill[BigDecimal](scala.math.pow(3, 10).toInt)(BigDecimal(0.0))
 
   case class EdgeAndXLists(lsts: List[List[Int]])
@@ -159,6 +187,9 @@ object Othello2 {
     def apply(lsts: List[Int]*): EdgeAndXLists = EdgeAndXLists(lsts.toList)
   }
 
+  /**
+    * The four edges (with their X-squares).
+    */
   val edgeAndXLists = EdgeAndXLists(
     List(22, 11, 12, 13, 14, 15, 16, 17, 18, 27),
     List(72, 81, 82, 83, 84, 85, 86, 87, 88, 77),
@@ -167,6 +198,10 @@ object Othello2 {
 
   val TopEdge: List[Int] = edgeAndXLists.lsts.head
 
+  /**
+    * The index counts 1 for player; 2 for opponent,
+    * on each square---summed as a base 3 number.
+    */
   def edgeIndex(player: Piece, board: Board, squares: List[Int]): Int = {
     var index = 0
     for (sq <- squares) {
@@ -178,10 +213,16 @@ object Othello2 {
     index
   }
 
+  /**
+    * Total edge evaluation for player to move on board.
+    */
   def edgeStability(player: Piece, board: Board): BigDecimal = {
     edgeAndXLists.lsts.map((l: List[Int]) => EdgeTable(edgeIndex(player, board, l))).sum
   }
 
+  /**
+    * Initialize *edge-table*, starting from the empty board.
+    */
   def initEdgeTable(): Unit = {
     for (npieces <- 0 until 10) {
       mapEdgeNPieces((board: Board, index: Int) => {
@@ -226,6 +267,9 @@ object Othello2 {
     def apply(arrs: Array[Any]*): StaticEdgeTable = StaticEdgeTable(arrs.toArray)
   }
 
+  /**
+    * Compute this edge's static stability
+    */
   def staticEdgeStability(player: Piece, board: Board): Int = {
     TopEdge.zip(0 to TopEdge.size).map((z: (Int, Int)) => {
       if (board.aref(z._1).equals(empty)) 0
@@ -278,6 +322,9 @@ object Othello2 {
     def apply(values: (Int, Int)*): CornerXsqs = new CornerXsqs(values.toMap)
   }
 
+  /**
+    * Call fn on all edges with n pieces.
+    */
   def mapEdgeNPieces(fn: (Board, Int) => Option[Int], player: Piece, board: Board, n: Int, squares: List[Int], index: Int): Option[Int] = {
     if (squares.length < n) None
     else if (squares.isEmpty) fn.apply(board, index)
@@ -296,6 +343,9 @@ object Othello2 {
     }
   }
 
+  /**
+    * Combine the best moves.
+    */
   def combineEdgeMoves(possibilities: List[List[BigDecimal]], player: Piece): Int = {
     var prob = BigDecimal(1.0)
     var value = BigDecimal(0.0)
@@ -318,10 +368,16 @@ object Othello2 {
     value.setScale(0, RoundingMode.HALF_UP).toInt
   }
 
+  /**
+    * Count the neighbors of this square occupied by player.
+    */
   def countEdgeNeighbors(player: Piece, board: Board, square: Int): Int = {
     countIf((inc: Int) => board.aref(square + inc).equals(player), List(1, -1))
   }
 
+  /**
+    * What's the probability that player can move to this square?
+    */
   def edgeMoveProbability(player: Piece, board: Board, square: Int): BigDecimal = {
     if (cornerXsqs.isXSquare(square)) BigDecimal(0.5)
     else if (board.isLegalMove(square, player)) BigDecimal(1.0)
@@ -343,12 +399,19 @@ object Othello2 {
     }
   }
 
+  /**
+    * Consider all possible edge moves.
+    * Combine their values into a single number.
+    */
   def possibleEdgeMovesValue(player: Piece, board: Board, index: Int): Int = {
     val possibilities = List(BigDecimal(1.0), EdgeTable(index)) ::
       TopEdge.filter((sq: Int) => board.aref(sq).equals(empty)).map((sq: Int) => possibleEdgeMove(player, board, sq))
     combineEdgeMoves(possibilities, player)
   }
 
+  /**
+    * Return a (prob val) pair for a possible edge move.
+    */
   def possibleEdgeMove(player: Piece, board: Board, sq: Int): List[BigDecimal] = {
     val newBoard = Board(replace(PlyBoards(player.id).pieces.to[ArrayBuffer], board.pieces))
     newBoard.makeMove(sq, player)
@@ -357,6 +420,10 @@ object Othello2 {
 
   val MoveNumber: Int = 1
 
+  /**
+    * Combine edge-stability, current mobility and
+    * potential mobility to arrive at an evaluation.
+    */
   def iagoEval(player: Piece, board: Board): Int = {
     val cEdg = 312000 + 6240 * MoveNumber
     val cCur = if (MoveNumber < 25) 6240 + (2000 * MoveNumber) else 75000 + (1000 * MoveNumber)
@@ -372,6 +439,9 @@ object Othello2 {
     ret1.setScale(0, RoundingMode.HALF_UP).toInt + ret2 + ret3
   }
 
+  /**
+    * Use an approximation of Iago's evaluation function.
+    */
   def iago(depth: Int): (Piece, Board) => Int = {
     alphaBetaSearcher3(depth, iagoEval)
   }
