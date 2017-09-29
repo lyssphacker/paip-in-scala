@@ -21,9 +21,9 @@ object Othello {
 
   import paip.chapter18.Othello.Piece._
 
-  def opponent(player: Piece): Piece = {
-    if (player.equals(black)) white
-    else black
+  val opponent: PartialFunction[Piece, Piece] = {
+    case p: Piece if p.equals(black) => white
+    case p: Piece if p.equals(white) => black
   }
 
   /**
