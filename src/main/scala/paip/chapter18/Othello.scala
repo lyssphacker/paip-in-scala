@@ -7,9 +7,13 @@ object Othello {
   object Piece extends Enumeration {
     type Piece = Value
     val empty: Piece = Value(".") // An empty square
-    val black: Piece = Value("@") // A black piece
-    val white: Piece = Value("0") // A white piece
     val outer: Piece = Value("?") // Marks squares outside the 8x8 board
+  }
+
+  object Player extends Enumeration {
+    type Player = Value
+    val black: Player = Value("@") // A black piece
+    val white: Player = Value("0") // A white piece
   }
 
   val allDirections = List(-11, -10, -9, -1, 1, 9, 10, 11)
