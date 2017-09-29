@@ -1,5 +1,7 @@
 package paip.chapter18
 
+import paip.chapter18.Othello.Player.Player
+
 import scala.util.Random
 
 object Othello {
@@ -24,8 +26,9 @@ object Othello {
   }).toList
 
   import paip.chapter18.Othello.Piece._
+  import paip.chapter18.Othello.Player._
 
-  def opponent(player: Piece): Piece = {
+  def opponent(player: Player): Player = {
     if (player.equals(black)) white
     else black
   }
@@ -38,11 +41,11 @@ object Othello {
       pieces(square)
     }
 
-    def aset(square: Int, value: Piece): Unit = {
+    def aset(square: Int, value: Player): Unit = {
       pieces(square) = value
     }
 
-    def count(p: Piece): Int = {
+    def count(p: Player): Int = {
       pieces.toList.count(_.equals(p))
     }
 
@@ -70,7 +73,7 @@ object Othello {
     /**
       * Return the square number of the bracketing piece.
       */
-    def findBracketingPiece(square: Int, player: Piece, dir: Int): Option[Int] = {
+    def findBracketingPiece(square: Int, player: Player, dir: Int): Option[Int] = {
       if (aref(square).equals(player)) Some(square)
       else if (aref(square).equals(opponent(player))) findBracketingPiece(square + dir, player, dir)
       else None
@@ -80,7 +83,7 @@ object Othello {
       * Would this move result in any flips in this direction?
       * If so, return the square number of the bracketing piece.
       */
-    def wouldFlip(move: Int, player: Piece, dir: Int): Option[Int] = {
+    def wouldFlip(move: Int, player: Player, dir: Int): Option[Int] = {
       val c = move + dir
       if (aref(c).equals(opponent(player))) findBracketingPiece(c + dir, player, dir)
       else None
@@ -89,7 +92,7 @@ object Othello {
     /**
       * Make any flips in the given direction.
       */
-    def makeFlips(move: Int, player: Piece, dir: Int): Unit = {
+    def makeFlips(move: Int, player: Player, dir: Int): Unit = {
       val bracketer = wouldFlip(move, player, dir)
       if (bracketer.isDefined) {
         for (c <- (move + dir) until bracketer.get by dir) {
@@ -101,7 +104,7 @@ object Othello {
     /**
       * Does player have any legal moves in this position?
       */
-    def anyLegalMove(player: Piece): Boolean = {
+    def anyLegalMove(player: Player): Boolean = {
       allSquares.exists(isLegalMove(_, player))
     }
 
@@ -109,7 +112,7 @@ object Othello {
       * A Legal move must be into an empty square, and it must
       * flip at least one opponent piece.
       */
-    def isLegalMove(move: Int, player: Piece): Boolean = {
+    def isLegalMove(move: Int, player: Player): Boolean = {
       aref(move).equals(empty) &&
         allDirections.exists(wouldFlip(move, player, _).isDefined)
     }
@@ -117,7 +120,7 @@ object Othello {
     /**
       * Compute the player to move next, or NIL if nobody can move.
       */
-    def nextToPlay(previousPlayer: Piece, print: Boolean): Option[Piece] = {
+    def nextToPlay(previousPlayer: Player, print: Boolean): Option[Player] = {
       val opp = opponent(previousPlayer)
       if (anyLegalMove(opp)) Some(opp)
       else if (anyLegalMove(previousPlayer)) {
@@ -130,7 +133,7 @@ object Othello {
     /**
       * Update board to reflect move by player
       */
-    def makeMove(move: Int, player: Piece): Board = {
+    def makeMove(move: Int, player: Player): Board = {
       aset(move, player)
       for (dir <- allDirections) makeFlips(move, player, dir)
       this
@@ -139,7 +142,7 @@ object Othello {
     /**
       * Is this a win, loss, or draw for player?
       */
-    def finalValue(player: Piece): Int = {
+    def finalValue(player: Player): Int = {
       countDifference(player, this) match {
         case -1 => Board.LosingValue
         case 0 => 0
@@ -164,7 +167,7 @@ object Othello {
   /**
     * Count player's pieces minus opponent's pieces.
     */
-  def countDifference(p: Piece, board: Board): Int = {
+  def countDifference(p: Player, board: Board): Int = {
     board.count(p) - board.count(opponent(p))
   }
 
@@ -222,7 +225,7 @@ object Othello {
     val board = initialBoard()
     val clock = Clock(minutes)
     try {
-      var player: Option[Piece] = Some(black)
+      var player: Option[Player] = Some(black)
       do {
         val strategy = if (player.get.equals(black)) blStrategy else whStrategy
         getMove(strategy, player.get, board, print, clock)
@@ -244,7 +247,7 @@ object Othello {
     * Call the player's strategy function to get a move.
     * Keep calling until a legal move is made.
     */
-  def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
+  def getMove(strategy: (Piece, Board) => Either[Int, String], player: Player, board: Board, print: Boolean, clock: Clock): Board = {
     if (print) board.printBoard(clock)
     val t0 = System.currentTimeMillis()
     val move = strategy.apply(player, board)
