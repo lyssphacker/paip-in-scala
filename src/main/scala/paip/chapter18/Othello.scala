@@ -141,6 +141,8 @@ object Othello {
       else if (diff < 0) Board.LosingValue
       else 0
     }
+
+    def copyBoard = this.copy(pieces.clone)
   }
 
   object Board {
@@ -307,7 +309,7 @@ object Othello {
   def maximizier(evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
     (player: Piece, board: Board) => {
       val moves = legalMoves(player, board)
-      val scores = moves.map((m: Int) => evalFn.apply(player, board.copy().makeMove(m, player)))
+      val scores = moves.map((m: Int) => evalFn.apply(player, board.copyBoard.makeMove(m, player)))
       val best = scores.max
       moves(scores.indexOf(best))
     }
