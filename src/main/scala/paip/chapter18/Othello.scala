@@ -604,7 +604,8 @@ object Othello {
 
   def main(args: Array[String]): Unit = {
     //            othello(human, human)
-    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
+    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
+//    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
     //    val result = randomOthelloSeries(
     //      alphaBetaSearcher(2, adaptFn(weightedSquares)),
     //      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
