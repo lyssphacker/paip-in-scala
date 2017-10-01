@@ -429,7 +429,7 @@ object Othello {
     }
   }
 
-  def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Int, Option[Either[Int, String]]) = {
+  def adaptEvalFn(fn: (Piece, Board) => Int): (Piece, Board) => (Int, Option[Either[Int, String]]) = {
     (player: Piece, board: Board) => {
       (fn.apply(player, board), None)
     }
@@ -595,30 +595,30 @@ object Othello {
     legalMoves(player, board).length
   }
 
-  def adaptFn1(fn: (Piece, Board) => Int): (Piece, Board) => Option[Either[Int, String]] = {
+  def adaptStrategy(fn: (Piece, Board) => Int): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
       Some(Left(fn.apply(player, board)))
     }
   }
 
   def main(args: Array[String]): Unit = {
-                othello(adaptFn1(human), adaptFn1(human))
-//    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
-//    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
-    //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
+                othello(adaptStrategy(human), adaptStrategy(human))
+//    othello(minimaxSearcher(3, adaptStrategy(countDifference)), adaptStrategy(maximizier(countDifference)))
+//    othello(adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(countDifference)))
+    //    othello(alphaBetaSearcher(6, adaptStrategy(countDifference)), alphaBetaSearcher(4, adaptStrategy(weightedSquares)))
     //    val result = randomOthelloSeries(
-    //      alphaBetaSearcher(2, adaptFn(weightedSquares)),
-    //      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
+    //      alphaBetaSearcher(2, adaptEvalFn(weightedSquares)),
+    //      alphaBetaSearcher(2, adaptEvalFn(modifiedWeightedSquares)),
     //      5)
     //    result
     //    roundRobin(
-    //      List(alphaBetaSearcher(4, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)),
-    //      alphaBetaSearcher(4, adaptFn(modifiedWeightedSquares)), randomStrategy), 5, 10,
+    //      List(alphaBetaSearcher(4, adaptEvalFn(countDifference)), alphaBetaSearcher(4, adaptEvalFn(weightedSquares)),
+    //      alphaBetaSearcher(4, adaptEvalFn(modifiedWeightedSquares)), randomStrategy), 5, 10,
     //      List("count-difference", "weighted", "modified-weighted", "random"))
 
     //    roundRobin(
-    //      List(adaptFn1(maximizier(countDifference)),
-    //        adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
+    //      List(adaptStrategy(maximizier(countDifference)),
+    //        adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
     //      List("count-difference", "weighted", "modified-weighted", "random"))
   }
 }
