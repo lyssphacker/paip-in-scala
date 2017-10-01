@@ -350,28 +350,27 @@ object Othello {
   def minimax(player: Piece,
               board: Board,
               ply: Int,
-              evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Option[Int], Option[Either[Int, String]]) = {
+              evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Int, Option[Either[Int, String]]) = {
     if (ply == 0) evalFn.apply(player, board)
     else {
       val moves = legalMoves(player, board)
       if (moves.isEmpty) {
         if (board.anyLegalMove(opponent(player))) {
           val result = minimax(opponent(player), board, ply - 1, evalFn)
-          val first = result._1.get
-          (Some(-first), None)
-        } else (Some(board.finalValue(player)), None)
+          (-result._1, None)
+        } else (board.finalValue(player), None)
       } else {
         var bestMove: Option[Either[Int, String]] = None
         var bestVal: Option[Int] = None
         for (move <- moves) {
-          val board2 = board.copy().makeMove(move, player)
-          val value = -minimax(opponent(player), board2, ply - 1, evalFn)._1.get
+          val board2 = board.copyBoard.makeMove(move, player)
+          val value = -minimax(opponent(player), board2, ply - 1, evalFn)._1
           if (bestVal.isEmpty || value > bestVal.get) {
             bestVal = Some(value)
             bestMove = Some(Left(move))
           }
         }
-        (bestVal, bestMove)
+        (bestVal.get, bestMove)
       }
     }
   }
@@ -380,7 +379,7 @@ object Othello {
     * A strategy that searches PLY levels and then uses EVAL-FN.
     */
   def minimaxSearcher(ply: Int,
-                      evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
+                      evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
       minimax(player, board, ply, evalFn)._2
     }
@@ -392,30 +391,29 @@ object Othello {
     * using cutoffs whenever possible.
     */
   def alphaBeta(player: Piece, board: Board, achievable: Int, cutoff: Int,
-                ply: Int, evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Option[Int], Option[Either[Int, String]]) = {
+                ply: Int, evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Int, Option[Either[Int, String]]) = {
     if (ply == 0) evalFn.apply(player, board)
     else {
       val moves = legalMoves(player, board)
       if (moves.isEmpty) {
         if (board.anyLegalMove(opponent(player))) {
           val result = alphaBeta(opponent(player), board, -cutoff, -achievable, ply - 1, evalFn)
-          val first = result._1.get
-          (Some(-first), None)
-        } else (Some(board.finalValue(player)), None)
+          (-result._1, None)
+        } else (board.finalValue(player), None)
       } else {
         var bestMove = moves.head
         var achievable_ = achievable
         moves.iterator.takeWhile((i: Int) => achievable_ >= cutoff).
           foreach((move: Int) => {
-            val board2 = board.copy().makeMove(move, player)
+            val board2 = board.copyBoard.makeMove(move, player)
             val result = alphaBeta(opponent(player), board2, -cutoff, -achievable_, ply - 1, evalFn)
-            val value = -result._1.get
+            val value = -result._1
             if (value > achievable_) {
               achievable_ = value
               bestMove = move
             }
           })
-        (Some(achievable_), Some(Left(bestMove)))
+        (achievable_, Some(Left(bestMove)))
       }
     }
   }
@@ -424,16 +422,16 @@ object Othello {
     * A strategy that searches to DEPTH and then uses EVAL-FN.
     */
   def alphaBetaSearcher(depth: Int,
-                        evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
+                        evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
     (player: Piece, board: Board) => {
       val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
       result._2.get
     }
   }
 
-  def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Option[Int], Option[Either[Int, String]]) = {
+  def adaptFn(fn: (Piece, Board) => Int): (Piece, Board) => (Int, Option[Either[Int, String]]) = {
     (player: Piece, board: Board) => {
-      (Some(fn.apply(player, board)), None)
+      (fn.apply(player, board), None)
     }
   }
 
@@ -605,8 +603,8 @@ object Othello {
 
   def main(args: Array[String]): Unit = {
     //            othello(human, human)
-//    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
-    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
+    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
+//    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
     //    val result = randomOthelloSeries(
     //      alphaBetaSearcher(2, adaptFn(weightedSquares)),
