@@ -136,11 +136,10 @@ object Othello {
       * Is this a win, loss, or draw for player?
       */
     def finalValue(player: Piece): Int = {
-      countDifference(player, this) match {
-        case -1 => Board.LosingValue
-        case 0 => 0
-        case 1 => Board.WinningValue
-      }
+      val diff = countDifference(player, this)
+      if (diff > 0) Board.WinningValue
+      else if (diff < 0) Board.LosingValue
+      else 0
     }
   }
 
@@ -605,7 +604,7 @@ object Othello {
   def main(args: Array[String]): Unit = {
     //            othello(human, human)
     othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
-//    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
+    //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
     //    val result = randomOthelloSeries(
     //      alphaBetaSearcher(2, adaptFn(weightedSquares)),
     //      alphaBetaSearcher(2, adaptFn(modifiedWeightedSquares)),
