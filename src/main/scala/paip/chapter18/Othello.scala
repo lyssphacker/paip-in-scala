@@ -253,7 +253,7 @@ object Othello {
     } else if (move.isDefined && move.get.isRight && move.get.right.get.equals("resign")) {
       throw OthelloException(if (player.equals(black)) -64 else 64)
     } else if (move.isDefined && move.get.isLeft && isValidMove(move.get.left.get) && board.isLegalMove(move.get.left.get, player)) {
-      if (print) println(s"$player moves to ${squareNames.numericToAlpha(move.get.left.get)}")
+      if (print) println(s"$player moves to ${squareNames.numericToAlpha(move.get.left.get).right.get}")
       board.makeMove(move.get.left.get, player)
     } else {
       move match {
