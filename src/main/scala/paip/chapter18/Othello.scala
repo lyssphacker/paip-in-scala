@@ -273,7 +273,7 @@ object Othello {
     * A human player for the game of Othello
     */
   def human(player: Piece, board: Board): Int = {
-    println(s"$player to move: ${legalMoves(player, board).map((m: Int) => squareNames.numericToAlpha(m).left.get).mkString(" ")}")
+    println(s"$player to move: ${legalMoves(player, board).map((m: Int) => squareNames.numericToAlpha(m).right.get).mkString(" ")}")
     var result: Option[Int] = None
     do {
       squareNames.alphaToNumeric(scala.io.StdIn.readLine()).left.getOrElse(None) match {
@@ -602,7 +602,7 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-    //            othello(human, human)
+                othello(adaptFn1(human), adaptFn1(human))
 //    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
 //    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
