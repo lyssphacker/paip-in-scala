@@ -210,8 +210,8 @@ object Othello {
     * Play a game of othello.  Return the score, where a positive
     * difference means black, the first player, wins.
     */
-  def othello(blStrategy: (Piece, Board) => Either[Int, String],
-              whStrategy: (Piece, Board) => Either[Int, String],
+  def othello(blStrategy: (Piece, Board) => Option[Either[Int, String]],
+              whStrategy: (Piece, Board) => Option[Either[Int, String]],
               print: Boolean = true,
               minutes: Int = 30): Int = {
     val board = initialBoard()
@@ -239,7 +239,7 @@ object Othello {
     * Call the player's strategy function to get a move.
     * Keep calling until a legal move is made.
     */
-  def getMove(strategy: (Piece, Board) => Either[Int, String], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
+  def getMove(strategy: (Piece, Board) => Option[Either[Int, String]], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
     if (print) board.printBoard(clock)
     val t0 = System.currentTimeMillis()
     val move = strategy.apply(player, board)
@@ -248,19 +248,20 @@ object Othello {
     if (clock.elt(player.id) < 0) {
       println(s"$player has no time left and forfeits.")
       throw OthelloException(if (player.equals(black)) -64 else 64)
-    } else if (move.isRight && move.right.get.equals("resign")) {
+    } else if (move.isDefined && move.get.isRight && move.get.right.get.equals("resign")) {
       throw OthelloException(if (player.equals(black)) -64 else 64)
-    } else if (move.isLeft && isValidMove(move.left.get) && board.isLegalMove(move.left.get, player)) {
-      if (print) println(s"$player moves to ${squareNames.numericToAlpha(move.left.get)}")
-      board.makeMove(move.left.get, player)
+    } else if (move.isDefined && move.get.isLeft && isValidMove(move.get.left.get) && board.isLegalMove(move.get.left.get, player)) {
+      if (print) println(s"$player moves to ${squareNames.numericToAlpha(move.get.left.get)}")
+      board.makeMove(move.get.left.get, player)
     } else {
       move match {
-        case Left(i) =>
+        case Some(Left(i)) =>
           squareNames.numericToAlpha(i) match {
             case Left(j) => println(s"Illegal move: $j")
             case Right(s) => println(s"Illegal move: $s")
           }
-        case Right(s) => println(s"Illegal move: $s")
+        case Some(Right(s)) => println(s"Illegal move: $s")
+        case None =>
       }
       getMove(strategy, player, board, print, clock)
     }
@@ -292,9 +293,9 @@ object Othello {
   /**
     * "Make any legal move.
     */
-  def randomStrategy(player: Piece, board: Board): Either[Int, String] = {
+  def randomStrategy(player: Piece, board: Board): Option[Either[Int, String]] = {
     val moves = legalMoves(player, board)
-    Left(moves(GlobalRandom.nextInt(moves.size)))
+    Some(Left(moves(GlobalRandom.nextInt(moves.size))))
   }
 
   /**
@@ -377,10 +378,9 @@ object Othello {
     * A strategy that searches PLY levels and then uses EVAL-FN.
     */
   def minimaxSearcher(ply: Int,
-                      evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
+                      evalFn: (Piece, Board) => (Option[Int], Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
-      val result = minimax(player, board, ply, evalFn)
-      Left(result._1.get)
+      minimax(player, board, ply, evalFn)._2
     }
   }
 
@@ -517,8 +517,8 @@ object Othello {
   /**
     * Play a series of 2*n-pairs games, swapping sides.
     */
-  def othelloSeries(strategy1: (Piece, Board) => Either[Int, String],
-                    strategy2: (Piece, Board) => Either[Int, String],
+  def othelloSeries(strategy1: (Piece, Board) => Option[Either[Int, String]],
+                    strategy2: (Piece, Board) => Option[Either[Int, String]],
                     npairs: Int): (Float, Int, List[Int]) = {
     var scores: List[Int] = List.empty
     1 to npairs foreach ((i: Int) => {
@@ -538,8 +538,8 @@ object Othello {
   /**
     * Play a series of 2*n games, starting from a random position.
     */
-  def randomOthelloSeries(strategy1: (Piece, Board) => Either[Int, String],
-                          strategy2: (Piece, Board) => Either[Int, String],
+  def randomOthelloSeries(strategy1: (Piece, Board) => Option[Either[Int, String]],
+                          strategy2: (Piece, Board) => Option[Either[Int, String]],
                           npairs: Int,
                           nrandom: Int = 10): (Float, Int, List[Int]) = {
     othelloSeries(switchStrategies(randomStrategy, nrandom, strategy1),
@@ -551,9 +551,9 @@ object Othello {
     * Make a new strategy that plays strategy1 for m moves,
     * then plays according to strategy2.
     */
-  def switchStrategies(strategy1: (Piece, Board) => Either[Int, String],
+  def switchStrategies(strategy1: (Piece, Board) => Option[Either[Int, String]],
                        m: Int,
-                       strategy2: (Piece, Board) => Either[Int, String]): (Piece, Board) => Either[Int, String] = {
+                       strategy2: (Piece, Board) => Option[Either[Int, String]]): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => (if (MoveNumber >= m) strategy1 else strategy2).apply(player, board)
   }
 
@@ -563,7 +563,7 @@ object Othello {
     * each opponent.  So with N strategies, a total of
     * N*(N-1)*N-PAIRS games are played.
     */
-  def roundRobin(strategies: List[(Piece, Board) => Either[Int, String]],
+  def roundRobin(strategies: List[(Piece, Board) => Option[Either[Int, String]]],
                  npairs: Int,
                  nrandom: Int = 10,
                  names: List[String]): Unit = {
@@ -595,16 +595,16 @@ object Othello {
     legalMoves(player, board).length
   }
 
-  def adaptFn1(fn: (Piece, Board) => Int): (Piece, Board) => Either[Int, String] = {
+  def adaptFn1(fn: (Piece, Board) => Int): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
-      Left(fn.apply(player, board))
+      Some(Left(fn.apply(player, board)))
     }
   }
 
   def main(args: Array[String]): Unit = {
     //            othello(human, human)
-    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
-//    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
+//    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
+    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
     //    val result = randomOthelloSeries(
     //      alphaBetaSearcher(2, adaptFn(weightedSquares)),
