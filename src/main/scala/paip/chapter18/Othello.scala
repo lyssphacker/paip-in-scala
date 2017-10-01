@@ -422,10 +422,10 @@ object Othello {
     * A strategy that searches to DEPTH and then uses EVAL-FN.
     */
   def alphaBetaSearcher(depth: Int,
-                        evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Either[Int, String] = {
+                        evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
       val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
-      result._2.get
+      Some(result._2.get)
     }
   }
 
@@ -603,7 +603,7 @@ object Othello {
 
   def main(args: Array[String]): Unit = {
     //            othello(human, human)
-    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
+//    othello(minimaxSearcher(3, adaptFn(countDifference)), adaptFn1(maximizier(countDifference)))
 //    othello(adaptFn1(maximizier(weightedSquares)), adaptFn1(maximizier(countDifference)))
     //    othello(alphaBetaSearcher(6, adaptFn(countDifference)), alphaBetaSearcher(4, adaptFn(weightedSquares)))
     //    val result = randomOthelloSeries(
