@@ -524,8 +524,8 @@ object Othello {
     var scores: List[Int] = List.empty
     1 to npairs foreach ((i: Int) => {
       GlobalRandom = new Random()
-      scores = othello(strategy1, strategy2, print = true) +: scores
-      scores = -othello(strategy2, strategy1, print = true) +: scores
+      scores = othello(strategy1, strategy2) +: scores
+      scores = -othello(strategy2, strategy1) +: scores
     })
 
     val res1 = countIf(isPositive, scores) + countIf(isZero, scores).toFloat / 2
