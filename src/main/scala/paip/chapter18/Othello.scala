@@ -524,8 +524,8 @@ object Othello {
                     npairs: Int): (Float, Int, List[Int]) = {
     var scores: List[Int] = List.empty
     1 to npairs foreach ((i: Int) => {
-      GlobalRandom = new Random()
       scores = othello(strategy1, strategy2) +: scores
+      GlobalRandom = new Random()
       scores = -othello(strategy2, strategy1) +: scores
     })
 
