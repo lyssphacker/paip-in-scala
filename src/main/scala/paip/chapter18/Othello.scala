@@ -218,6 +218,7 @@ object Othello {
               minutes: Int = 30): Int = {
     val board = initialBoard()
     val clock = Clock(minutes)
+    MoveNumber = 1
     try {
       var player: Option[Piece] = Some(black)
       do {
