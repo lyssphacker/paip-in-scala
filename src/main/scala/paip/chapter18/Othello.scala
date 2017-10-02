@@ -224,6 +224,7 @@ object Othello {
         val strategy = if (player.get.equals(black)) blStrategy else whStrategy
         getMove(strategy, player.get, board, print, clock)
         player = board.nextToPlay(player.get, print)
+        MoveNumber = MoveNumber + 1
       } while (player.isDefined)
     } catch {
       case ex: OthelloException => return ex.result
