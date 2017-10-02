@@ -555,7 +555,7 @@ object Othello {
   def switchStrategies(strategy1: (Piece, Board) => Option[Either[Int, String]],
                        m: Int,
                        strategy2: (Piece, Board) => Option[Either[Int, String]]): (Piece, Board) => Option[Either[Int, String]] = {
-    (player: Piece, board: Board) => (if (MoveNumber >= m) strategy1 else strategy2).apply(player, board)
+    (player: Piece, board: Board) => (if (MoveNumber <= m) strategy1 else strategy2).apply(player, board)
   }
 
   /**
