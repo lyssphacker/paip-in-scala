@@ -608,8 +608,13 @@ object Othello {
 //    othello(minimaxSearcher(3, adaptEvalFn(countDifference)), adaptStrategy(maximizier(countDifference)))
 //    othello(adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(countDifference)))
 //        othello(alphaBetaSearcher(6, adaptEvalFn(countDifference)), alphaBetaSearcher(4, adaptEvalFn(weightedSquares)))
-        val result = randomOthelloSeries(
-          alphaBetaSearcher(4, adaptEvalFn(weightedSquares)),
+//        val result = randomOthelloSeries(
+//          alphaBetaSearcher(4, adaptEvalFn(weightedSquares)),
+//          randomStrategy,
+//          5)
+//        result
+    val result = randomOthelloSeries(
+          adaptStrategy(maximizier(modifiedWeightedSquares)),
           randomStrategy,
           5)
         result
