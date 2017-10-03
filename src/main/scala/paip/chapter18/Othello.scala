@@ -427,7 +427,7 @@ object Othello {
                         evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
       val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
-      Some(result._2.get)
+      result._2
     }
   }
 
