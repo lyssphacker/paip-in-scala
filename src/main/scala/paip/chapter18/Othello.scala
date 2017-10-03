@@ -405,7 +405,7 @@ object Othello {
       } else {
         var bestMove = moves.head
         var achievable_ = achievable
-        moves.iterator.takeWhile((i: Int) => achievable_ >= cutoff).
+        moves.iterator.takeWhile((i: Int) => achievable_ < cutoff).
           foreach((move: Int) => {
             val board2 = board.copyBoard.makeMove(move, player)
             val result = alphaBeta(opponent(player), board2, -cutoff, -achievable_, ply - 1, evalFn)
