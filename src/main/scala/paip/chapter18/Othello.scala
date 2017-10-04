@@ -214,7 +214,7 @@ object Othello {
     */
   def othello(blStrategy: (Piece, Board) => Option[Either[Int, String]],
               whStrategy: (Piece, Board) => Option[Either[Int, String]],
-              print: Boolean = true,
+              print: Boolean = false,
               minutes: Int = 30): Int = {
     val board = initialBoard()
     val clock = Clock(minutes)
@@ -405,8 +405,8 @@ object Othello {
       } else {
         var bestMove = moves.head
         var achievable_ = achievable
-        moves.iterator.takeWhile((i: Int) => achievable_ < cutoff).
-          foreach((move: Int) => {
+        for (move <- moves) {
+          if (achievable_ < cutoff) {
             val board2 = board.copyBoard.makeMove(move, player)
             val result = alphaBeta(opponent(player), board2, -cutoff, -achievable_, ply - 1, evalFn)
             val value = -result._1
@@ -414,8 +414,21 @@ object Othello {
               achievable_ = value
               bestMove = move
             }
-          })
-        (achievable_, Some(Left(bestMove)))
+          }
+        }
+//        moves.iterator.takeWhile((i: Int) => achievable_ < cutoff).
+//          foreach((move: Int) => {
+//            val board2 = board.copyBoard.makeMove(move, player)
+//            val result = alphaBeta(opponent(player), board2, -cutoff, -achievable_, ply - 1, evalFn)
+//            val value = -result._1
+//            if (value > achievable_) {
+//              achievable_ = value
+//              bestMove = move
+//            }
+//          })
+        val result = (achievable_, Some(Left(bestMove)))
+//        println(result)
+        result
       }
     }
   }
@@ -608,16 +621,21 @@ object Othello {
 //    othello(minimaxSearcher(3, adaptEvalFn(countDifference)), adaptStrategy(maximizier(countDifference)))
 //    othello(adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(countDifference)))
 //        othello(alphaBetaSearcher(6, adaptEvalFn(countDifference)), alphaBetaSearcher(4, adaptEvalFn(weightedSquares)))
-//        val result = randomOthelloSeries(
-//          alphaBetaSearcher(4, adaptEvalFn(weightedSquares)),
-//          randomStrategy,
-//          5)
-//        result
-    val result = randomOthelloSeries(
-          adaptStrategy(maximizier(modifiedWeightedSquares)),
+        val result = randomOthelloSeries(
+          alphaBetaSearcher(4, adaptEvalFn(weightedSquares)),
           randomStrategy,
           5)
         result
+//    val result = randomOthelloSeries(
+//          minimaxSearcher(4, adaptEvalFn(weightedSquares)),
+//          randomStrategy,
+//          5)
+//        result
+//    val result = randomOthelloSeries(
+//          adaptStrategy(maximizier(modifiedWeightedSquares)),
+//          randomStrategy,
+//          5)
+//        result
 //        roundRobin(
 //          List(adaptStrategy(maximizier(countDifference)), adaptStrategy(maximizier(mobility)),
 //            adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
