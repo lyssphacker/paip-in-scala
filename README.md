@@ -1,10 +1,10 @@
 [Paradigms of Artificial Intelligence Programming](http://norvig.com/paip.html) in Scala
 
-### Trying things out
+# Trying things out
 
 ## chapter 18
 
-# Othello.scala
+### Othello.scala
 
 ```scala
 othello(adaptStrategy(human), adaptStrategy(human))
