@@ -29,150 +29,153 @@ object Othello {
   /**
     * Game board.
     */
-  case class Board(pieces: Array[Piece])
+  class Board(val pieces: Array[Piece]) {
 
-  val WinningValue: Int = Int.MaxValue
-  val LosingValue: Int = Int.MinValue
+    def aref(square: Int): Piece = {
+      pieces(square)
+    }
 
-  /**
-    * Return the square number of the bracketing piece.
-    */
-  def findBracketingPiece(board: Board, square: Int, player: Piece, dir: Int): Option[Int] = {
-    if (aref(square, board).equals(player)) Some(square)
-    else if (aref(square, board).equals(opponent(player))) findBracketingPiece(board, square + dir, player, dir)
-    else None
-  }
+    def aset(square: Int, value: Piece): Unit = {
+      pieces(square) = value
+    }
 
-  def aref(square: Int, board: Board): Piece = {
-    board.pieces(square)
-  }
+    def count(p: Piece): Int = {
+      pieces.toList.count(_.equals(p))
+    }
 
-  /**
-    * Would this move result in any flips in this direction?
-    * If so, return the square number of the bracketing piece.
-    */
-  def wouldFlip(board: Board, move: Int, player: Piece, dir: Int): Option[Int] = {
-    val c = move + dir
-    if (aref(c, board).equals(opponent(player))) findBracketingPiece(board, c + dir, player, dir)
-    else None
-  }
+    /**
+      * Return the square number of the bracketing piece.
+      */
+    def findBracketingPiece(square: Int, player: Piece, dir: Int): Option[Int] = {
+      if (aref(square).equals(player)) Some(square)
+      else if (aref(square).equals(opponent(player))) findBracketingPiece(square + dir, player, dir)
+      else None
+    }
 
-  /**
-    * Print a board, along with some statistics.
-    */
-  def printBoard(board: Board, clock: Clock = Clock.empty): Unit = {
-    print(s"${" " * 4} a b c d e f g h [$black=${count(black, board)} " +
-      s"$white=${count(white, board)} (${countDifference(black, board)})]")
+    /**
+      * Would this move result in any flips in this direction?
+      * If so, return the square number of the bracketing piece.
+      */
+    def wouldFlip(move: Int, player: Piece, dir: Int): Option[Int] = {
+      val c = move + dir
+      if (aref(c).equals(opponent(player))) findBracketingPiece(c + dir, player, dir)
+      else None
+    }
 
-    for (row <- 1 to 8) {
+    /**
+      * Print a board, along with some statistics.
+      */
+    def printBoard(clock: Clock = Clock.empty): Unit = {
+      print(s"${" " * 4} a b c d e f g h [$black=${count(black)} " +
+        s"$white=${count(white)} (${countDifference(black, this)})]")
+
+      for (row <- 1 to 8) {
+        println()
+        print(s"  $row  ")
+        for (col <- 1 to 8) {
+          print(s"${aref(col + row * 10)} ")
+        }
+      }
+      if (!clock.isEmpty) {
+        print(s"  [$black = ${clock.toMinsSecs(black.id)} $white = ${clock.toMinsSecs(white.id)}]")
+      }
       println()
-      print(s"  $row  ")
-      for (col <- 1 to 8) {
-        print(s"${aref(col + row * 10, board)} ")
+      println()
+    }
+
+    /**
+      * Make any flips in the given direction.
+      */
+    def makeFlips(move: Int, player: Piece, dir: Int): Unit = {
+      val bracketer = wouldFlip(move, player, dir)
+      if (bracketer.isDefined) {
+        for (c <- (move + dir) until bracketer.get by dir) {
+          aset(c, player)
+        }
       }
     }
-    if (!clock.isEmpty) {
-      print(s"  [$black = ${clock.toMinsSecs(black.id)} $white = ${clock.toMinsSecs(white.id)}]")
+
+    /**
+      * Does player have any legal moves in this position?
+      */
+    def anyLegalMove(player: Piece): Boolean = {
+      allSquares.exists(isLegalMove(_, player))
     }
-    println()
-    println()
-  }
 
-  def aset(square: Int, value: Piece, board: Board): Unit = {
-    board.pieces(square) = value
-  }
+    /**
+      * A Legal move must be into an empty square, and it must
+      * flip at least one opponent piece.
+      */
+    def isLegalMove(move: Int, player: Piece): Boolean = {
+      aref(move).equals(empty) &&
+        allDirections.exists(wouldFlip(move, player, _).isDefined)
+    }
 
-  def count(p: Piece, board: Board): Int = {
-    board.pieces.toList.count(_.equals(p))
-  }
-
-  /**
-    * Make any flips in the given direction.
-    */
-  def makeFlips(move: Int, player: Piece, board: Board, dir: Int): Unit = {
-    val bracketer = wouldFlip(board, move, player, dir)
-    if (bracketer.isDefined) {
-      for (c <- (move + dir) until bracketer.get by dir) {
-        aset(c, player, board)
+    /**
+      * Compute the player to move next, or NIL if nobody can move.
+      */
+    def nextToPlay(previousPlayer: Piece, print: Boolean): Option[Piece] = {
+      val opp = opponent(previousPlayer)
+      if (anyLegalMove(opp)) Some(opp)
+      else if (anyLegalMove(previousPlayer)) {
+        if (print) println(s"$opp has no moves and must pass.")
+        Some(previousPlayer)
       }
+      else None
+    }
+
+    /**
+      * Update board to reflect move by player
+      */
+    def makeMove(move: Int, player: Piece): Board = {
+      aset(move, player)
+      for (dir <- allDirections) makeFlips(move, player, dir)
+      this
+    }
+
+    /**
+      * Is this a win, loss, or draw for player?
+      */
+    def finalValue(player: Piece): Int = {
+      val diff = countDifference(player, this)
+      if (diff > 0) Board.WinningValue
+      else if (diff < 0) Board.LosingValue
+      else 0
+    }
+
+    def copyBoard: Board = new Board(pieces.clone)
+
+    /**
+      * Valid moves are numbers in the range 11-88 that end in 1-8.
+      */
+    def isValidMove(move: Int): Boolean = {
+      val mod = move % 10
+      move >= 11 && move <= 88 && mod >= 1 && mod <= 8
     }
   }
 
-  /**
-    * Does player have any legal moves in this position?
-    */
-  def anyLegalMove(player: Piece, board: Board): Boolean = {
-    allSquares.exists(isLegalMove(_, player, board))
-  }
-
-  /**
-    * A Legal move must be into an empty square, and it must
-    * flip at least one opponent piece.
-    */
-  def isLegalMove(move: Int, player: Piece, board: Board): Boolean = {
-    aref(move, board).equals(empty) &&
-      allDirections.exists(wouldFlip(board, move, player, _).isDefined)
-  }
-
-  /**
-    * Compute the player to move next, or NIL if nobody can move.
-    */
-  def nextToPlay(previousPlayer: Piece, board: Board, print: Boolean): Option[Piece] = {
-    val opp = opponent(previousPlayer)
-    if (anyLegalMove(opp, board)) Some(opp)
-    else if (anyLegalMove(previousPlayer, board)) {
-      if (print) println(s"$opp has no moves and must pass.")
-      Some(previousPlayer)
-    }
-    else None
-  }
-
-  /**
-    * Update board to reflect move by player
-    */
-  def makeMove(move: Int, player: Piece, board: Board): Board = {
-    aset(move, player, board)
-    for (dir <- allDirections) makeFlips(move, player, board, dir)
-    board
-  }
-
-  /**
-    * Is this a win, loss, or draw for player?
-    */
-  def finalValue(player: Piece, board: Board): Int = {
-    val diff = countDifference(player, board)
-    if (diff > 0) WinningValue
-    else if (diff < 0) LosingValue
-    else 0
-  }
-
-  def copyBoard(board: Board) = board.copy(board.pieces.clone)
-
-  /**
-    * Valid moves are numbers in the range 11-88 that end in 1-8.
-    */
-  def isValidMove(move: Int, board: Board): Boolean = {
-    val mod = move % 10
-    move >= 11 && move <= 88 && mod >= 1 && mod <= 8
+  object Board {
+    val WinningValue: Int = Int.MaxValue
+    val LosingValue: Int = Int.MinValue
   }
 
   /**
     * Count player's pieces minus opponent's pieces.
     */
   def countDifference(p: Piece, board: Board): Int = {
-    count(p, board) - count(opponent(p), board)
+    board.count(p) - board.count(opponent(p))
   }
 
   /**
     * Return a board, empty except for four pieces in the middle.
     */
   def initialBoard(): Board = {
-    val board = Board(Array.fill[Piece](100)(outer))
-    for (square <- allSquares) aset(square, empty, board)
-    aset(44, white, board)
-    aset(45, black, board)
-    aset(54, black, board)
-    aset(55, white, board)
+    val board = new Board(Array.fill[Piece](100)(outer))
+    for (square <- allSquares) board.aset(square, empty)
+    board.aset(44, white)
+    board.aset(45, black)
+    board.aset(54, black)
+    board.aset(55, white)
     board
   }
 
@@ -222,7 +225,7 @@ object Othello {
       do {
         val strategy = if (player.get.equals(black)) blStrategy else whStrategy
         getMove(strategy, player.get, board, print, clock)
-        player = nextToPlay(player.get, board, print)
+        player = board.nextToPlay(player.get, print)
         MoveNumber = MoveNumber + 1
       } while (player.isDefined)
     } catch {
@@ -230,7 +233,7 @@ object Othello {
     }
     if (print) {
       println("The game is over. Final result:")
-      printBoard(board, clock)
+      board.printBoard(clock)
     }
     countDifference(black, board)
   }
@@ -242,7 +245,7 @@ object Othello {
     * Keep calling until a legal move is made.
     */
   def getMove(strategy: (Piece, Board) => Option[Either[Int, String]], player: Piece, board: Board, print: Boolean, clock: Clock): Board = {
-    if (print) printBoard(board, clock)
+    if (print) board.printBoard(clock)
     val t0 = System.currentTimeMillis()
     val move = strategy.apply(player, board)
     val t1 = System.currentTimeMillis()
@@ -252,9 +255,9 @@ object Othello {
       throw OthelloException(if (player.equals(black)) -64 else 64)
     } else if (move.isDefined && move.get.isRight && move.get.right.get.equals("resign")) {
       throw OthelloException(if (player.equals(black)) -64 else 64)
-    } else if (move.isDefined && move.get.isLeft && isValidMove(move.get.left.get, board) && isLegalMove(move.get.left.get, player, board)) {
+    } else if (move.isDefined && move.get.isLeft && board.isValidMove(move.get.left.get) && board.isLegalMove(move.get.left.get, player)) {
       if (print) println(s"$player moves to ${squareNames.numericToAlpha(move.get.left.get, board).right.get}")
-      makeMove(move.get.left.get, player, board)
+      board.makeMove(move.get.left.get, player)
     } else {
       move match {
         case Some(Left(i)) =>
@@ -289,7 +292,7 @@ object Othello {
     * Returns a list of legal moves for player
     */
   def legalMoves(player: Piece, board: Board): List[Int] = {
-    allSquares.filter((m: Int) => isLegalMove(m, player, board))
+    allSquares.filter((m: Int) => board.isLegalMove(m, player))
   }
 
   /**
@@ -309,7 +312,7 @@ object Othello {
   def maximizier(evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
     (player: Piece, board: Board) => {
       val moves = legalMoves(player, board)
-      val scores = moves.map((m: Int) => evalFn.apply(player, makeMove(m, player, copyBoard(board))))
+      val scores = moves.map((m: Int) => evalFn.apply(player, board.copyBoard.makeMove(m, player)))
       val best = scores.max
       moves(scores.indexOf(best))
     }
@@ -338,8 +341,8 @@ object Othello {
     */
   def weightedSquares(player: Piece, board: Board): Int = {
     val opp = opponent(player)
-    val sum1 = allSquares.filter((s: Int) => player.equals(aref(s, board))).map(weights(_)).sum
-    val sum2 = allSquares.filter((s: Int) => opp.equals(aref(s, board))).map(-weights(_)).sum
+    val sum1 = allSquares.filter((s: Int) => player.equals(board.aref(s))).map(weights(_)).sum
+    val sum2 = allSquares.filter((s: Int) => opp.equals(board.aref(s))).map(-weights(_)).sum
     sum1 + sum2
   }
 
@@ -355,15 +358,15 @@ object Othello {
     else {
       val moves = legalMoves(player, board)
       if (moves.isEmpty) {
-        if (anyLegalMove(opponent(player), board)) {
+        if (board.anyLegalMove(opponent(player))) {
           val result = minimax(opponent(player), board, ply - 1, evalFn)
           (-result._1, None)
-        } else (finalValue(player, board), None)
+        } else (board.finalValue(player), None)
       } else {
         var bestMove: Option[Either[Int, String]] = None
         var bestVal: Option[Int] = None
         for (move <- moves) {
-          val board2 = makeMove(move, player, copyBoard(board))
+          val board2 = board.copyBoard.makeMove(move, player)
           val value = -minimax(opponent(player), board2, ply - 1, evalFn)._1
           if (bestVal.isEmpty || value > bestVal.get) {
             bestVal = Some(value)
@@ -396,16 +399,16 @@ object Othello {
     else {
       val moves = legalMoves(player, board)
       if (moves.isEmpty) {
-        if (anyLegalMove(opponent(player), board)) {
+        if (board.anyLegalMove(opponent(player))) {
           val result = alphaBeta(opponent(player), board, -cutoff, -achievable, ply - 1, evalFn)
           (-result._1, None)
-        } else (finalValue(player, board), None)
+        } else (board.finalValue(player), None)
       } else {
         var bestMove = moves.head
         var achievable_ = achievable
         var i = 0
         do {
-          val board2 = makeMove(moves(i), player, copyBoard(board))
+          val board2 = board.copyBoard.makeMove(moves(i), player)
           val result = alphaBeta(opponent(player), board2, -cutoff, -achievable_, ply - 1, evalFn)
           val value = -result._1
           if (value > achievable_) {
@@ -425,7 +428,7 @@ object Othello {
   def alphaBetaSearcher(depth: Int,
                         evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
-      val result = alphaBeta(player, board, LosingValue, WinningValue, depth, evalFn)
+      val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
       result._2
     }
   }
@@ -444,10 +447,10 @@ object Othello {
     var w = weightedSquares(player, board)
     val neighborTable = NeighborTable(board)
     List(11, 18, 81, 88).foreach((corner: Int) => {
-      if (!aref(corner, board).equals(empty))
+      if (!board.aref(corner).equals(empty))
         for (c <- neighbors(corner, neighborTable))
-          if (!aref(c, board).equals(empty))
-            w += (5 - weights(c)) * (if (aref(c, board).equals(player)) 1 else -1)
+          if (!board.aref(c).equals(empty))
+            w += (5 - weights(c)) * (if (board.aref(c).equals(player)) 1 else -1)
     })
     w
   }
@@ -459,7 +462,7 @@ object Othello {
       val squares = Array.fill[List[Int]](100)(List())
       for (square <- allSquares)
         for (dir <- allDirections)
-          if (isValidMove(square + dir, board))
+          if (board.isValidMove(square + dir))
             squares(square) = squares(square) :+ (square + dir)
 
       new NeighborTable(squares)
@@ -487,7 +490,7 @@ object Othello {
       * Convert from numeric to alphanumeric square notation.
       */
     def numericToAlpha(num: Int, board: Board): Either[Int, String] = {
-      if (isValidMove(num, board)) Right(names(num))
+      if (board.isValidMove(num)) Right(names(num))
       else Left(num)
     }
   }
@@ -603,10 +606,10 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-    othello(adaptStrategy(human), adaptStrategy(human))
-//    roundRobin(
-//      List(adaptStrategy(maximizier(countDifference)), adaptStrategy(maximizier(mobility)),
-//        adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
-//      List("count-difference", "mobility", "weighted", "modified-weighted", "random"))
+//    othello(adaptStrategy(human), adaptStrategy(human))
+        roundRobin(
+          List(adaptStrategy(maximizier(countDifference)), adaptStrategy(maximizier(mobility)),
+            adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
+          List("count-difference", "mobility", "weighted", "modified-weighted", "random"))
   }
 }
