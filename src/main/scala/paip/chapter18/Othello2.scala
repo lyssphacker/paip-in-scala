@@ -40,12 +40,12 @@ object Othello2 {
       val board = node.board
       val nodes = legalNodes(player, board, evalFn)
       if (nodes.isEmpty) {
-        if (board.anyLegalMove(opponent(player))) {
+        if (anyLegalMove(opponent(player), board)) {
           (-alphaBeta2(opponent(player), negateValue(node),
             -cutoff, -achievable, -ply, evalFn)._1,
             None)
         } else {
-          (board.finalValue(player), None)
+          (finalValue(player, board), None)
         }
       } else {
         var bestNode = nodes.head
@@ -78,9 +78,9 @@ object Othello2 {
     else {
       val moves = putFirst(killer, legalMoves(player, board))
       if (moves.isEmpty) {
-        if (board.anyLegalMove(player))
+        if (anyLegalMove(player, board))
           (-alphaBeta3(opponent(player), board, -cutoff, -achievable, ply - 1, evalFn, None)._1, None)
-        else (board.finalValue(player), None)
+        else (finalValue(player, board), None)
       } else {
         var bestMove = moves.head
         val newBoard = PlyBoards(ply)
@@ -90,7 +90,7 @@ object Othello2 {
         moves.iterator.takeWhile((i: Int) => achievable_ >= cutoff).
           foreach((move: Int) => {
             val result = alphaBeta3(opponent(player),
-              Board(replace(newBoard.pieces.to[ArrayBuffer], board.pieces)).makeMove(move, player),
+              makeMove(move, player, Board(replace(newBoard.pieces.to[ArrayBuffer], board.pieces))),
               -cutoff, -achievable_, ply - 1, evalFn, killer2)
             result match {
               case (value, reply) => {
@@ -138,7 +138,7 @@ object Othello2 {
   def legalNodes(player: Piece, board: Board, evalFn: (Piece, Board) => Int): List[Node] = {
     val moves = legalMoves(player, board)
     moves.map((move: Int) => {
-      val newBoard = board.copy().makeMove(move, player)
+      val newBoard = makeMove(move, player, board.copy())
       Node(Some(move), newBoard, evalFn.apply(player, newBoard))
     }).sortWith(_.value > _.value)
   }
@@ -153,7 +153,7 @@ object Othello2 {
 
   val PlyBoards: Array[Board] = Array.fill[Board](40)(initialBoard())
 
-  val neighborTable = NeighborTable()
+  val neighborTable = NeighborTable(initialBoard())
 
   /**
     * Current Mobility is the number of legal moves.
@@ -166,10 +166,10 @@ object Othello2 {
     var current = 0
     var potential = 0
     for (square <- allSquares) {
-      if (board.aref(square).equals(empty)) {
-        if (board.isLegalMove(square, player))
+      if (aref(square, board).equals(empty)) {
+        if (isLegalMove(square, player, board))
           current = current + 1
-        else if (neighborTable.neighbors(square).exists((sq: Int) => board.aref(sq).equals(opp)))
+        else if (neighbors(square, neighborTable).exists((sq: Int) => aref(sq, board).equals(opp)))
           potential = potential + 1
       }
     }
@@ -206,8 +206,8 @@ object Othello2 {
     var index = 0
     for (sq <- squares) {
       index = index * 3 +
-        (if (board.aref(sq).equals(empty)) 0
-        else if (board.aref(sq).equals(player)) 1
+        (if (aref(sq, board).equals(empty)) 0
+        else if (aref(sq, board).equals(player)) 1
         else 2)
     }
     index
@@ -272,8 +272,8 @@ object Othello2 {
     */
   def staticEdgeStability(player: Piece, board: Board): Int = {
     TopEdge.zip(0 to TopEdge.size).map((z: (Int, Int)) => {
-      if (board.aref(z._1).equals(empty)) 0
-      else if (board.aref(z._1).equals(player)) staticEdgeTable.aref(z._2, pieceStability(board, z._1))
+      if (aref(z._1, board).equals(empty)) 0
+      else if (aref(z._1, board).equals(player)) staticEdgeTable.aref(z._2, pieceStability(board, z._1))
       else -staticEdgeTable.aref(z._2, pieceStability(board, z._1))
     }).sum
   }
@@ -285,9 +285,9 @@ object Othello2 {
   def pieceStability(board: Board, sq: Int): Int = {
     if (cornerXsqs.isCorner(sq)) Stable
     else if (cornerXsqs.isXSquare(sq) && cornerXsqs.cornerFor(sq).isDefined)
-      if (board.aref(cornerXsqs.cornerFor(sq).get).equals(empty)) Unstable else SemiStable
+      if (aref(cornerXsqs.cornerFor(sq).get, board).equals(empty)) Unstable else SemiStable
     else {
-      val player = board.aref(sq)
+      val player = aref(sq, board)
       val opp = opponent(player)
       val p1 = board.pieces.slice(sq, 19).find((p: Piece) => !p.equals(player))
       val p2 = board.pieces.slice(11, sq).reverse.find((p: Piece) => !p.equals(player))
@@ -332,12 +332,12 @@ object Othello2 {
       val index3 = 3 * index
       val sq = squares.head
       mapEdgeNPieces(fn, player, board, n, squares.tail, index3)
-      if (n > 0 && board.aref(sq).equals(empty)) {
-        board.aset(sq, player)
+      if (n > 0 && aref(sq, board).equals(empty)) {
+        aset(sq, player, board)
         mapEdgeNPieces(fn, player, board, n - 1, squares.tail, 1 + index3)
-        board.aset(sq, opponent(player))
+        aset(sq, opponent(player), board)
         mapEdgeNPieces(fn, player, board, n - 1, squares.tail, 2 + index3)
-        board.aset(sq, empty)
+        aset(sq, empty, board)
         Some(empty.id)
       } else None
     }
@@ -372,7 +372,7 @@ object Othello2 {
     * Count the neighbors of this square occupied by player.
     */
   def countEdgeNeighbors(player: Piece, board: Board, square: Int): Int = {
-    countIf((inc: Int) => board.aref(square + inc).equals(player), List(1, -1))
+    countIf((inc: Int) => aref(square + inc, board).equals(player), List(1, -1))
   }
 
   /**
@@ -380,11 +380,11 @@ object Othello2 {
     */
   def edgeMoveProbability(player: Piece, board: Board, square: Int): BigDecimal = {
     if (cornerXsqs.isXSquare(square)) BigDecimal(0.5)
-    else if (board.isLegalMove(square, player)) BigDecimal(1.0)
+    else if (isLegalMove(square, player, board)) BigDecimal(1.0)
     else if (cornerXsqs.isCorner(square)) {
       val xSq = cornerXsqs.xSquareFor(square)
-      if (xSq.isDefined && board.aref(xSq.get).equals(empty)) BigDecimal(0.1)
-      else if (xSq.isDefined && board.aref(xSq.get).equals(player)) BigDecimal(0.001)
+      if (xSq.isDefined && aref(xSq.get, board).equals(empty)) BigDecimal(0.1)
+      else if (xSq.isDefined && aref(xSq.get, board).equals(player)) BigDecimal(0.001)
       else BigDecimal(0.9)
     }
     else {
@@ -395,7 +395,7 @@ object Othello2 {
         Array(BigDecimal(0.05), BigDecimal(0.3), None),
         Array(BigDecimal(0.01), None, None)
       )
-      arr(i1)(i2).asInstanceOf[BigDecimal] / (if (board.isLegalMove(square, opponent(player))) 1 else 2)
+      arr(i1)(i2).asInstanceOf[BigDecimal] / (if (isLegalMove(square, opponent(player), board)) 1 else 2)
     }
   }
 
@@ -405,7 +405,7 @@ object Othello2 {
     */
   def possibleEdgeMovesValue(player: Piece, board: Board, index: Int): Int = {
     val possibilities = List(BigDecimal(1.0), EdgeTable(index)) ::
-      TopEdge.filter((sq: Int) => board.aref(sq).equals(empty)).map((sq: Int) => possibleEdgeMove(player, board, sq))
+      TopEdge.filter((sq: Int) => aref(sq, board).equals(empty)).map((sq: Int) => possibleEdgeMove(player, board, sq))
     combineEdgeMoves(possibilities, player)
   }
 
@@ -414,7 +414,7 @@ object Othello2 {
     */
   def possibleEdgeMove(player: Piece, board: Board, sq: Int): List[BigDecimal] = {
     val newBoard = Board(replace(PlyBoards(player.id).pieces.to[ArrayBuffer], board.pieces))
-    newBoard.makeMove(sq, player)
+    makeMove(sq, player, newBoard)
     List(edgeMoveProbability(player, board, sq), -EdgeTable(edgeIndex(opponent(player), newBoard, TopEdge)))
   }
 
