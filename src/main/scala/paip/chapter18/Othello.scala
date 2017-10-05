@@ -476,7 +476,7 @@ object Othello {
     neighborTable.squares(square)
   }
 
-  case class SquareNames(names: List[String]) {
+  class SquareNames(names: List[String]) {
     /**
       * Convert from alphanumeric to numeric square notation.
       */
@@ -497,7 +497,7 @@ object Othello {
 
   object SquareNames {
     def apply(): SquareNames = {
-      SquareNames(crossProduct((x: String, y: String) => x + y,
+      new SquareNames(crossProduct((x: String, y: String) => x + y,
         List("?", "a", "b", "c", "d", "e", "f", "g", "h", "?"),
         List("?", "1", "2", "3", "4", "5", "6", "7", "8", "?")))
     }
