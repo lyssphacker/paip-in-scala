@@ -176,7 +176,7 @@ object Othello {
     board
   }
 
-  case class Clock(values: Array[Int]) {
+  class Clock(values: Array[Int]) {
     def decf(player: Int, amount: Long): Unit = {
       values(player) = values(player) - amount.toInt
     }
@@ -197,9 +197,9 @@ object Othello {
     * Game clock.
     */
   object Clock {
-    def apply(minutes: Int): Clock = Clock(Array.fill[Int](List(black.id, white.id).max + 1)(minutes * 60000))
+    def apply(minutes: Int): Clock = new Clock(Array.fill[Int](List(black.id, white.id).max + 1)(minutes * 60000))
 
-    def empty: Clock = Clock(Array[Int]())
+    def empty: Clock = new Clock(Array[Int]())
   }
 
   case class OthelloException(result: Int) extends Exception
@@ -603,9 +603,10 @@ object Othello {
   }
 
   def main(args: Array[String]): Unit = {
-    roundRobin(
-      List(adaptStrategy(maximizier(countDifference)), adaptStrategy(maximizier(mobility)),
-        adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
-      List("count-difference", "mobility", "weighted", "modified-weighted", "random"))
+    othello(adaptStrategy(human), adaptStrategy(human))
+//    roundRobin(
+//      List(adaptStrategy(maximizier(countDifference)), adaptStrategy(maximizier(mobility)),
+//        adaptStrategy(maximizier(weightedSquares)), adaptStrategy(maximizier(modifiedWeightedSquares)), randomStrategy), 5, 10,
+//      List("count-difference", "mobility", "weighted", "modified-weighted", "random"))
   }
 }
