@@ -31,10 +31,8 @@ object Othello {
     */
   case class Board(pieces: Array[Piece])
 
-  object Board {
-    val WinningValue: Int = Int.MaxValue
-    val LosingValue: Int = Int.MinValue
-  }
+  val WinningValue: Int = Int.MaxValue
+  val LosingValue: Int = Int.MinValue
 
   /**
     * Return the square number of the bracketing piece.
@@ -143,8 +141,8 @@ object Othello {
     */
   def finalValue(player: Piece, board: Board): Int = {
     val diff = countDifference(player, board)
-    if (diff > 0) Board.WinningValue
-    else if (diff < 0) Board.LosingValue
+    if (diff > 0) WinningValue
+    else if (diff < 0) LosingValue
     else 0
   }
 
@@ -427,7 +425,7 @@ object Othello {
   def alphaBetaSearcher(depth: Int,
                         evalFn: (Piece, Board) => (Int, Option[Either[Int, String]])): (Piece, Board) => Option[Either[Int, String]] = {
     (player: Piece, board: Board) => {
-      val result = alphaBeta(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn)
+      val result = alphaBeta(player, board, LosingValue, WinningValue, depth, evalFn)
       result._2
     }
   }

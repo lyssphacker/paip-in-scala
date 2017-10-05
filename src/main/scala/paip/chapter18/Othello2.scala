@@ -21,7 +21,7 @@ object Othello2 {
     (player: Piece, board: Board) => {
       val result = alphaBeta2(player,
         Node(board = board, value = evalFn.apply(player, board)),
-        Board.LosingValue, Board.WinningValue, depth, evalFn)
+        LosingValue, WinningValue, depth, evalFn)
       result._2.get.square.get
     }
   }
@@ -85,7 +85,7 @@ object Othello2 {
         var bestMove = moves.head
         val newBoard = PlyBoards(ply)
         var killer2: Option[Int] = None
-        var killer2Val = Board.WinningValue
+        var killer2Val = WinningValue
         var achievable_ = achievable
         moves.iterator.takeWhile((i: Int) => achievable_ >= cutoff).
           foreach((move: Int) => {
@@ -120,7 +120,7 @@ object Othello2 {
     */
   def alphaBetaSearcher3(depth: Int, evalFn: (Piece, Board) => Int): (Piece, Board) => Int = {
     (player: Piece, board: Board) => {
-      val result = alphaBeta3(player, board, Board.LosingValue, Board.WinningValue, depth, evalFn, None)
+      val result = alphaBeta3(player, board, LosingValue, WinningValue, depth, evalFn, None)
       result._2.get
     }
   }
