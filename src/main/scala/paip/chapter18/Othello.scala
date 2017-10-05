@@ -452,7 +452,7 @@ object Othello {
     w
   }
 
-  case class NeighborTable(squares: Array[List[Int]])
+  class NeighborTable(val squares: Array[List[Int]])
 
   object NeighborTable {
     def apply(board: Board): NeighborTable = {
@@ -462,7 +462,7 @@ object Othello {
           if (isValidMove(square + dir, board))
             squares(square) = squares(square) :+ (square + dir)
 
-      NeighborTable(squares)
+      new NeighborTable(squares)
     }
   }
 
